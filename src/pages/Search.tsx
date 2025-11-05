@@ -22,9 +22,9 @@ export default function Search() {
           selectedCategory={category}
           onCategoryChange={setCategory}
           sortBy={sortBy}
-          onSortChange={setSortBy} onClearFilters={function (): void {
-            throw new Error("Function not implemented.");
-          } }        />
+          onSortChange={setSortBy}
+          onClearFilters={() => { setCategory("all"); setSortBy("recent"); setQuery(""); }}
+        />
       </div>
       <div className="md:col-span-3">
         <SearchResults query={query} category={category} sortBy={sortBy} />

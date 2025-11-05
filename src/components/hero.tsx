@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Search, TrendingUp, Shield, Globe } from "lucide-react"
+import hero from "@/assets/hero.png"
 
 export default function Hero() {
   return (
@@ -9,7 +10,7 @@ export default function Hero() {
         className="relative min-h-[70vh] md:min-h-[80vh] w-full bg-center bg-cover bg-fixed"
         style={{
           backgroundImage:
-            "url('https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?q=80&w=1920&auto=format&fit=crop')",
+            hero ? `url(${hero})` : undefined,
         }}
       >
         {/* Enhanced overlay with gradient */}

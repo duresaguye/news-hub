@@ -1,9 +1,11 @@
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Bookmark, Share2, Clock, Eye } from "lucide-react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useEverything } from "@/lib/newsHooks"
+import { useTopHeadlines } from "@/lib/newsHooks"
 
 interface SearchResultsProps {
   query: string
@@ -12,7 +14,7 @@ interface SearchResultsProps {
 }
 
 interface Article {
-  id: number
+  id: string
   title: string
   description: string
   source: string
@@ -22,53 +24,32 @@ interface Article {
   readTime?: string
   views?: number
   isBookmarked?: boolean
+  url?: string
 }
 
 export default function SearchResults({ query, category, sortBy }: SearchResultsProps) {
-  const [openId, setOpenId] = useState<number | null>(null)
-  const [bookmarked, setBookmarked] = useState<Set<number>>(new Set([1]))
-  
-  // Enhanced sample results
-  const results: Article[] = [
-    {
-      id: 1,
-      title: "Breaking: Major Policy Change Announced in Federal Government",
-      description: "The government has announced a comprehensive policy change that will affect millions of citizens across key sectors including healthcare and education.",
-      source: "Ethiopian News Agency",
-      date: "2 hours ago",
-      category: "Politics",
-      image: "https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1200&auto=format&fit=crop",
-      readTime: "3 min read",
-      views: 1247,
-      isBookmarked: true
-    },
-    {
-      id: 2,
-      title: "Tech Innovation Reshapes Ethiopian Agricultural Sector",
-      description: "A groundbreaking technology developed by local engineers is set to transform the agricultural industry with AI-powered solutions.",
-      source: "Addis Tech Review",
-      date: "5 hours ago",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&auto=format&fit=crop",
-      readTime: "4 min read",
-      views: 892,
-      isBookmarked: false
-    },
-    {
-      id: 3,
-      title: "Economic Growth Reaches 7.2% in Latest Quarter Report",
-      description: "Latest economic data shows unprecedented growth in key sectors including manufacturing and services, exceeding government projections.",
-      source: "Business Ethiopia",
-      date: "1 day ago",
-      category: "Business",
-      image: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1200&auto=format&fit=crop",
-      readTime: "5 min read",
-      views: 1563,
-      isBookmarked: false
-    },
-  ]
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set())
 
-  const toggleBookmark = (id: number, e: React.MouseEvent) => {
+  const q = useMemo(() => {
+    if (!query && category === "all") return "";
+    if (!query && category !== "all") return category;
+    if (query && category !== "all") return `${query} ${category}`;
+    return query;
+  }, [query, category]) as string
+
+  const sort = sortBy === "recent" ? "publishedAt" : sortBy === "popular" ? "popularity" : "relevancy"
+  const isBlankAll = (!q || q.trim() === "") && category === "all"
+  const everything = useEverything({ q, sortBy: sort, language: "en", pageSize: 20 })
+  const headlines = useTopHeadlines({ country: "us", pageSize: 20 })
+
+  const loading = isBlankAll ? headlines.loading : everything.loading
+  const error = isBlankAll ? headlines.error : everything.error
+  const data = isBlankAll ? headlines.data : (everything.data ?? null)
+
+  const results: Article[] = (data ?? []) as unknown as Article[]
+
+  const toggleBookmark = (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const newBookmarked = new Set(bookmarked)
     if (newBookmarked.has(id)) {
@@ -79,27 +60,16 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
     setBookmarked(newBookmarked)
   }
 
-  const sortedResults = [...results].sort((a, b) => {
-    if (sortBy === "recent") {
-      return new Date(b.date).getTime() - new Date(a.date).getTime()
-    }
-    if (sortBy === "popular") {
-      return (b.views || 0) - (a.views || 0)
-    }
-    if (sortBy === "relevant") {
-      return a.title.toLowerCase().includes(query.toLowerCase()) ? -1 : 1
-    }
-    return 0
-  })
+  const sortedResults = results
 
   return (
     <div className="space-y-6">
       {/* Results Header */}
-      {query && (
+      {(query || category !== "all") && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            {results.length} results found for "<span className="font-semibold text-gray-900">{query}</span>"
-            {category !== "all" && ` in ${category}`}
+            {results.length} results for {query ? (<span className="font-semibold text-gray-900">"{query}"</span>) : 'your filters'}
+            {category !== "all" && ` • ${category}`}
           </p>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Clock className="w-4 h-4" />
@@ -109,7 +79,18 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
       )}
 
       {/* Results Grid */}
-      {results.length === 0 ? (
+      {loading ? (
+        <div className="py-16 text-center text-gray-500">Loading…</div>
+      ) : error ? (
+        <Card className="text-center py-16">
+          <CardContent>
+            <div className="max-w-md mx-auto">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load articles</h3>
+              <p className="text-gray-600 mb-4">{error}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : results.length === 0 ? (
         <Card className="text-center py-16">
           <CardContent>
             <div className="max-w-md mx-auto">
@@ -231,8 +212,7 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                         <span>{result.source}</span>
                         <span>•</span>
                         <span>{result.date}</span>
-                        <span>•</span>
-                        <span>{result.readTime}</span>
+                        {result.readTime && <><span>•</span><span>{result.readTime}</span></>}
                       </div>
                     </div>
                   </div>
@@ -240,7 +220,7 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                   <div className="p-6 max-h-[60vh] overflow-y-auto">
                     <div className="prose prose-lg max-w-none">
                       <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                        {result.description} This is a sample preview. In a real application, this would contain the full article content fetched from your news API.
+                        {result.description}
                       </p>
                       
                       <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -263,10 +243,14 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                             />
                             {bookmarked.has(result.id) ? 'Saved' : 'Save'}
                           </Button>
-                          <Button variant="outline" size="sm" className="gap-2">
-                            <Share2 className="w-4 h-4" />
-                            Share
-                          </Button>
+                          {result.url && (
+                            <a href={result.url} target="_blank" rel="noopener noreferrer">
+                              <Button variant="outline" size="sm" className="gap-2">
+                                <Share2 className="w-4 h-4" />
+                                Open Source
+                              </Button>
+                            </a>
+                          )}
                         </div>
                         <Button onClick={() => setOpenId(null)}>
                           Close

@@ -9,6 +9,9 @@ import Article from "./pages/Article";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Trending from "./pages/Trending";
+import World from "./pages/World";
+import Politics from "./pages/Politics";
+import Technology from "./pages/Technology";
 
 function App() {
   return (
@@ -22,6 +25,9 @@ function App() {
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/register" element={<Register />} />
         <Route path="/trending" element={<Trending />} />
+        <Route path="/world" element={<World />} />
+        <Route path="/politics" element={<Politics />} />
+        <Route path="/technology" element={<Technology />} />
       </Routes>
       <Footer />
     </div>

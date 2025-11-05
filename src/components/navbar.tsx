@@ -60,7 +60,7 @@ export default function Navbar() {
           <div className="h-6 w-px bg-white/20 mx-2"></div>
           
           <Link to="/auth/login">
-            <Button variant="outline" className="border-white/60 text-white hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full px-4">
+            <Button variant="outline" className="border-white/60 text-primary hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full px-4">
               Sign In
             </Button>
           </Link>
