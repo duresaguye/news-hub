@@ -1,7 +1,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  // output omitted -> uses default node_modules/@prisma/client
+
 }
 
 datasource db {

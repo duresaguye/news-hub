@@ -39,38 +39,66 @@ export default function ArticleDetailsPage() {
     async function fetchArticle() {
       try {
         setLoading(true);
-        // Extract domain from URL to search
+        
+        // First try to fetch the specific article by its URL
+        try {
+          const response = await fetch(`/api/news/article?url=${encodeURIComponent(decodedUrl)}`);
+          const data = await response.json();
+          
+          if (data.article) {
+            setArticle(data.article);
+            return;
+          }
+        } catch (err) {
+          console.error('Error fetching specific article:', err);
+        }
+        
+        // If specific article fetch fails, try searching by domain
+        try {
+          const url = new URL(decodedUrl);
+          const domain = url.hostname.replace('www.', '');
+          
+          const searchResponse = await fetch(`/api/news/everything?domains=${domain}&pageSize=50`);
+          const searchData = await searchResponse.json();
+          
+          if (searchData.articles?.length > 0) {
+            // Try to find a matching article by URL or title
+            const foundArticle = searchData.articles.find(
+              (a: NewsApiArticle) => 
+                a.url === decodedUrl || 
+                a.title.toLowerCase() === new URL(decodedUrl).pathname.split('/').pop()?.toLowerCase()
+            );
+            
+            if (foundArticle) {
+              setArticle(foundArticle);
+              return;
+            }
+            
+            // If no exact match, use the first article from the domain
+            setArticle({
+              ...searchData.articles[0],
+              url: decodedUrl, // Keep the original URL
+            });
+            return;
+          }
+        } catch (err) {
+          console.error('Error searching articles by domain:', err);
+        }
+        
+        // If all else fails, create a minimal article object
         const url = new URL(decodedUrl);
         const domain = url.hostname.replace('www.', '');
         
-        // Search for the article
-        const response = await fetch(`/api/news/everything?domains=${domain}&pageSize=100`);
-        const data = await response.json();
-        
-        if (data.status === 'error') {
-          setError(data.message || 'Failed to fetch article');
-          return;
-        }
-        
-        // Find the article by URL
-        const foundArticle = data.articles?.find((a: NewsApiArticle) => a.url === decodedUrl);
-        
-        if (foundArticle) {
-          setArticle(foundArticle);
-        } else {
-          // If not found, try to get from cache or use URL directly
-          // For now, create a basic article object
-          setArticle({
-            source: { id: null, name: domain },
-            author: null,
-            title: 'Article',
-            description: 'Click below to read the full article on the source website.',
-            url: decodedUrl,
-            urlToImage: null,
-            publishedAt: new Date().toISOString(),
-            content: null,
-          });
-        }
+        setArticle({
+          source: { id: null, name: domain },
+          author: null,
+          title: url.pathname.split('/').pop()?.replace(/-/g, ' ') || 'Article',
+          description: `Read the full article on ${domain}`,
+          url: decodedUrl,
+          urlToImage: null,
+          publishedAt: new Date().toISOString(),
+          content: null,
+        });
       } catch (err: any) {
         setError(err.message || 'Failed to load article');
       } finally {
@@ -116,7 +144,9 @@ export default function ArticleDetailsPage() {
   if (error || !article) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <Empty title="Article not found" description={error || 'The article you are looking for could not be found.'} />
+        <Empty title="Article not found">
+          {error || 'The article you are looking for could not be found.'}
+        </Empty>
         <div className="mt-8 text-center">
           <Button onClick={() => router.back()} variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -211,29 +241,67 @@ export default function ArticleDetailsPage() {
         {/* Content */}
         <Card className="mb-8">
           <CardContent className="pt-6">
-            {article.content ? (
-              <div
-                className="prose prose-lg max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{
-                  __html: article.content
-                    .replace(/\[.*?\]/g, '') // Remove citations like [1234 chars]
-                    .replace(/\+\d+.*/g, '') // Remove "+123 more chars"
-                    .split('\n')
-                    .map((para) => `<p>${para.trim()}</p>`)
-                    .join(''),
-                }}
-              />
-            ) : (
-              <div className="space-y-4">
-                <p className="text-lg leading-relaxed">
-                  {article.description || 'Full article content is not available. Please visit the source to read the complete article.'}
-                </p>
-                <div className="mt-6 p-4 bg-muted rounded-lg">
+            {article.content || article.description ? (
+              <div className="space-y-6">
+                {/* Show description as a lead-in */}
+                {article.description && (
+                  <div className="prose prose-lg max-w-none dark:prose-invert">
+                    <p className="text-xl font-light leading-relaxed text-muted-foreground">
+                      {article.description}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Main content */}
+                {article.content && (
+                  <div className="prose prose-lg max-w-none dark:prose-invert">
+                    {article.content
+                      .replace(/\[.*?\]/g, '') // Remove citations like [1234 chars]
+                      .replace(/\+\d+.*/g, '') // Remove "+123 more chars"
+                      .split('\n')
+                      .filter(para => para.trim().length > 0) // Remove empty paragraphs
+                      .map((para, index) => (
+                        <p key={index} className="mb-4 leading-relaxed">
+                          {para.trim()}
+                        </p>
+                      ))}
+                  </div>
+                )}
+                
+                {/* Source link */}
+                <div className="mt-8 p-4 bg-muted/30 rounded-lg border border-muted">
                   <p className="text-sm text-muted-foreground mb-3">
-                    To read the full article, visit the original source:
+                    This article was originally published on {new URL(article.url).hostname}. 
+                    Read the full story with additional details and media:
                   </p>
+                  <Button variant="outline" asChild>
+                    <a 
+                      href={article.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Continue reading on {article.source.name}
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="prose prose-lg max-w-none dark:prose-invert">
+                  <p className="text-lg leading-relaxed">
+                    We couldn't load the full content of this article, but you can read it directly on the source website.
+                  </p>
+                </div>
+                <div className="p-4 bg-muted/30 rounded-lg border border-muted">
                   <Button asChild>
-                    <a href={article.url} target="_blank" rel="noopener noreferrer">
+                    <a 
+                      href={article.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center"
+                    >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       Read Full Article on {article.source.name}
                     </a>

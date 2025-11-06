@@ -1,30 +1,133 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
+import { handleLogout } from '@/lib/auth-client';
+
+type UserProfile = {
+  name: string
+  email: string
+  createdAt?: string
+  subscriptions?: string[]
+}
 
 export default function ProfileSettings() {
-  const [formData, setFormData] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    phone: "+251 9 12 34 56 78",
-    bio: "News enthusiast and tech follower",
+  const router = useRouter()
+  const [formData, setFormData] = useState<UserProfile>({
+    name: "",
+    email: "",
+    subscriptions: []
   })
-
   const [isEditing, setIsEditing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        setError(null)
+        const response = await authClient.getSession()
+        
+        // Handle different response structures
+        const sessionData = response && typeof response === 'object' && 'data' in response 
+          ? (response as any).data 
+          : response;
+        
+       
+        const userData = sessionData?.user || sessionData;
+        
+        if (userData) {
+          const userProfile = {
+            name: userData.name || '',
+            email: userData.email || '',
+            createdAt: userData.created_at || userData.createdAt || new Date().toISOString(),
+            subscriptions: Array.isArray(userData.subscriptions) ? userData.subscriptions : []
+          };
+          
+          setFormData(userProfile)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error)
+        const errorMessage = error instanceof Error ? error.message : 'An error occurred while loading your profile'
+        setError(errorMessage)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserProfile()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSave = () => {
-    setIsEditing(false)
-    // Save logic would go here
+  const handleSave = async () => {
+    try {
+    
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile')
+      }
+
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Failed to update profile:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile'
+      setError(errorMessage)
+    }
+  }
+
+  const signOutUser = async () => {
+    setIsLoggingOut(true);
+    await handleLogout({
+      onSuccess: () => router.push('/auth/login'),
+      onError: (e) => console.error(e),
+      onFinally: () => setIsLoggingOut(false)
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Loading profile...</CardTitle>
+        </CardHeader>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-destructive">Failed to load profile. {error}</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -50,21 +153,6 @@ export default function ProfileSettings() {
                 placeholder="your@email.com"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Phone</label>
-              <Input name="phone" value={formData.phone} onChange={handleChange} placeholder="+251 9 XX XX XX XX" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Bio</label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                placeholder="Tell us about yourself"
-                className="w-full px-3 py-2 border border-border rounded-lg bg-card text-foreground"
-                rows={4}
-              />
-            </div>
             <div className="flex gap-3">
               <Button onClick={handleSave} className="flex-1">
                 Save Changes
@@ -86,19 +174,39 @@ export default function ProfileSettings() {
                 <p className="text-foreground font-medium">{formData.email}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Phone</p>
-                <p className="text-foreground font-medium">{formData.phone}</p>
-              </div>
-              <div>
                 <p className="text-sm text-muted-foreground mb-1">Member Since</p>
-                <p className="text-foreground font-medium">January 2025</p>
+                <p className="text-foreground font-medium">
+                  {formData.createdAt ? 
+                    new Date(formData.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    }) : 
+                    'Not available'}
+                </p>
               </div>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Bio</p>
-              <p className="text-foreground">{formData.bio}</p>
+              <p className="text-sm text-muted-foreground mb-1">Subscriptions</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.subscriptions?.length ? (
+                  formData.subscriptions.map((sub, index) => (
+                    <span key={index} className="px-3 py-1 bg-muted rounded-full text-sm">
+                      {sub}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No active subscriptions</p>
+                )}
+              </div>
+              <Button 
+                onClick={() => setIsEditing(true)}
+                className="mt-4"
+              >
+                Edit Profile
+              </Button>
             </div>
-            <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+           
           </>
         )}
       </CardContent>
