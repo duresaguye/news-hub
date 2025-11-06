@@ -1,10 +1,7 @@
 {
+  "/auth/register/page": "app/auth/register/page.js",
   "/page": "app/page.js",
   "/profile/page": "app/profile/page.js",
-  "/technology/page": "app/technology/page.js",
-  "/trending/page": "app/trending/page.js",
-  "/article/[id]/page": "app/article/[id]/page.js",
-  "/api/news/top-headlines/route": "app/api/news/top-headlines/route.js",
   "/search/page": "app/search/page.js",
-  "/api/news/everything/route": "app/api/news/everything/route.js"
+  "/api/news/top-headlines/route": "app/api/news/top-headlines/route.js"
 }

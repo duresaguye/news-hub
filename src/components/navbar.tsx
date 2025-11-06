@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 
 
-export default function Navbar() {
+export default function Navbar({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -49,26 +49,30 @@ export default function Navbar() {
               <Search className="w-4 h-4" />
             </Button>
           </Link>
-          
-          
-          <Link href="/profile">
-            <Button variant="ghost" size="icon" className="text-white/90 hover:text-[var(--brand-accent)] hover:bg-white/10 rounded-full">
-              <User className="w-4 h-4" />
-            </Button>
-          </Link>
+          {isAuthenticated && (
+            <Link href="/profile">
+              <Button variant="ghost" size="icon" className="text-white/90 hover:text-[var(--brand-accent)] hover:bg-white/10 rounded-full">
+                <User className="w-4 h-4" />
+              </Button>
+            </Link>
+          )}
           
           <div className="h-6 w-px bg-white/20 mx-2"></div>
           
-          <Link href="/auth/login">
-            <Button variant="outline" className="border-white/60 text-primary hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full px-4">
-              Sign In
-            </Button>
-          </Link>
-          <Link href="/auth/register">
-            <Button className="bg-[var(--brand-accent)] text-[var(--primary-foreground)] hover:brightness-110 rounded-full px-4 font-semibold">
-              Subscribe
-            </Button>
-          </Link>
+          {!isAuthenticated && (
+            <>
+              <Link href="/auth/login">
+                <Button variant="outline" className="border-white/60 text-primary hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full px-4">
+                  Sign In
+                </Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button className="bg-[var(--brand-accent)] text-[var(--primary-foreground)] hover:brightness-110 rounded-full px-4 font-semibold">
+                  Subscribe
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -106,6 +110,7 @@ export default function Navbar() {
             </div>
 
             {/* Quick Actions */}
+            {isAuthenticated && (
             <div className="border-t border-white/20 pt-4 space-y-2">
               {[
                 { name: 'Search', path: '/search', icon: Search },
@@ -124,20 +129,23 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
+            )}
 
             {/* Auth Buttons */}
-            <div className="border-t border-white/20 pt-4 space-y-3">
-              <Link href="/auth/login" onClick={() => setIsOpen(false)}>
-                <Button variant="outline" className="w-full border-white/60 text-white hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/auth/register" onClick={() => setIsOpen(false)}>
-                <Button className="w-full bg-[var(--brand-accent)] text-[var(--primary-foreground)] hover:brightness-110 rounded-full font-semibold">
-                  Subscribe Now
-                </Button>
-              </Link>
-            </div>
+            {!isAuthenticated && (
+              <div className="border-t border-white/20 pt-4 space-y-3">
+                <Link href="/auth/login" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full border-white/60 text-white hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/register" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-[var(--brand-accent)] text-[var(--primary-foreground)] hover:brightness-110 rounded-full font-semibold">
+                    Subscribe Now
+                  </Button>
+                </Link>
+              </div>
+            )}
 
             {/* Current User Info (if logged in) */}
             <div className="border-t border-white/20 pt-4 text-center">

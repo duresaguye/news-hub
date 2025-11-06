@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/page": [
+    "/auth/register/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/auth/register/page.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
@@ -16,20 +16,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/profile/page.js"
     ],
-    "/technology/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/technology/page.js"
-    ],
-    "/trending/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/trending/page.js"
-    ],
-    "/article/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/article/[id]/page.js"
+      "static/chunks/app/page.js"
     ],
     "/search/page": [
       "static/chunks/webpack.js",
