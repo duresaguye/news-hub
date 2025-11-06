@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight } from "lucide-react"
-import { Link } from "react-router-dom"
+import Link from "next/link"
 
 interface RelatedArticlesProps {
   currentId: string
@@ -35,7 +35,7 @@ export default function RelatedArticles({ currentId }: RelatedArticlesProps) {
       <h3 className="text-2xl font-bold text-foreground mb-6">Related Articles</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {relatedArticles.map((article) => (
-          <Link key={article.id} to={`/article/${article.id}`}>
+          <Link key={article.id} href={`/article/${article.id}`}>
             <Card className="h-full hover:border-primary transition cursor-pointer">
               <CardHeader>
                 <div className="mb-2">

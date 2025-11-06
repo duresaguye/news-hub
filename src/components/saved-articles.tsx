@@ -1,5 +1,8 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bookmark, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export default function SavedArticles() {
   const savedArticles = [
@@ -38,26 +41,28 @@ export default function SavedArticles() {
         </Card>
       ) : (
         savedArticles.map((article) => (
-          <Card key={article.id} className="hover:border-primary transition cursor-pointer">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-primary uppercase">{article.category}</span>
-                    <span className="text-xs text-muted-foreground">{article.date}</span>
+          <Link key={article.id} href={`/article/${encodeURIComponent(`https://example.com/article/${article.id}`)}`}>
+            <Card className="hover:border-primary transition cursor-pointer">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-semibold text-primary uppercase">{article.category}</span>
+                      <span className="text-xs text-muted-foreground">{article.date}</span>
+                    </div>
+                    <CardTitle className="line-clamp-2">{article.title}</CardTitle>
                   </div>
-                  <CardTitle className="line-clamp-2">{article.title}</CardTitle>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{article.source}</span>
-              <div className="flex items-center gap-2">
-                <Bookmark className="w-4 h-4 text-primary fill-primary" />
-                <ArrowRight className="w-4 h-4 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{article.source}</span>
+                <div className="flex items-center gap-2">
+                  <Bookmark className="w-4 h-4 text-primary fill-primary" />
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         ))
       )}
     </div>

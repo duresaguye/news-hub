@@ -15,30 +15,16 @@ export type NewsApiResponse = {
   articles: NewsApiArticle[];
 };
 
-const BASE_URL = "https://newsapi.org/v2";
-
-function getApiKey(): string {
-  const apiKey = import.meta.env.VITE_NEWS_API_KEY as string | undefined;
-  if (!apiKey) {
-    throw new Error("Missing VITE_NEWS_API_KEY. Add it to your .env file.");
-  }
-  return apiKey;
-}
-
-function toQuery(params: Record<string, string | number | boolean | undefined | null>): string {
-  const usp = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === "") return;
-    usp.set(key, String(value));
-  });
-  return usp.toString();
-}
-
 async function doGet(path: string, params: Record<string, unknown> = {}): Promise<NewsApiResponse> {
-  const apiKey = getApiKey();
-  const query = toQuery({ ...params, apiKey });
-  const url = `${BASE_URL}${path}?${query}`;
-  const res = await fetch(url);
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      searchParams.append(key, String(value));
+    }
+  });
+
+  const url = `/api/news${path}?${searchParams.toString()}`;
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`NewsAPI request failed: ${res.status} ${res.statusText} - ${text}`);

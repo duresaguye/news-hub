@@ -1,0 +1,157 @@
+.card {
+  max-width: fit-content;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  gap: 1rem;
+  backdrop-filter: blur(15px);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1),
+    inset 0 0 5px rgba(255, 255, 255, 0.2), 
+    0 5px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.5s;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.card ul {
+  padding: 1rem;
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.card ul li {
+  cursor: pointer;
+}
+
+.svg {
+  transition: all 0.3s;
+  padding: 0.8rem;
+  height: 45px;
+  width: 45px;
+  border-radius: 100%;
+  color: var(--brand-accent);
+  fill: currentColor;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2),
+    inset 0 0 5px rgba(255, 255, 255, 0.3), 
+    0 5px 5px rgba(0, 0, 0, 0.1);
+}
+
+.text {
+  opacity: 0;
+  border-radius: 5px;
+  padding: 5px 8px;
+  transition: all 0.3s;
+  color: var(--brand-accent);
+  background-color: rgba(255, 255, 255, 0.9);
+  position: absolute;
+  z-index: 9999;
+  font-weight: 600;
+  font-size: 0.8rem;
+  box-shadow: -5px 0 1px rgba(153, 153, 153, 0.2),
+    -10px 0 1px rgba(153, 153, 153, 0.1),
+    inset 0 0 20px rgba(255, 255, 255, 0.3),
+    inset 0 0 5px rgba(255, 255, 255, 0.5), 
+    0 5px 5px rgba(0, 0, 0, 0.082);
+}
+
+.isoPro {
+  transition: 0.5s;
+  position: relative;
+}
+
+.isoPro:hover a > .svg {
+  transform: translate(8px, -8px);
+  border-radius: 100%;
+}
+
+.isoPro:hover .text {
+  opacity: 1;
+  transform: translate(15px, -2px) skew(-5deg);
+}
+
+.isoPro:hover .svg {
+  transform: translate(3px, -3px);
+}
+
+.isoPro span {
+  opacity: 0;
+  position: absolute;
+  color: var(--brand-accent);
+  border-color: var(--brand-accent);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.2),
+    inset 0 0 5px rgba(255, 255, 255, 0.3), 
+    0 5px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  transition: all 0.3s;
+  height: 45px;
+  width: 45px;
+}
+
+.isoPro:hover span {
+  opacity: 1;
+}
+
+.isoPro:hover span:nth-child(1) {
+  opacity: 0.2;
+}
+
+.isoPro:hover span:nth-child(2) {
+  opacity: 0.4;
+  transform: translate(3px, -3px);
+}
+
+.isoPro:hover span:nth-child(3) {
+  opacity: 0.6;
+  transform: translate(6px, -6px);
+}
+
+@media (max-width: 768px) {
+  .card ul {
+    gap: 1rem;
+  }
+  
+  .svg {
+    height: 40px;
+    width: 40px;
+    padding: 0.7rem;
+  }
+  
+  .isoPro span {
+    height: 40px;
+    width: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card ul {
+    gap: 0.8rem;
+  }
+  
+  .svg {
+    height: 35px;
+    width: 35px;
+    padding: 0.6rem;
+  }
+  
+  .isoPro span {
+    height: 35px;
+    width: 35px;
+  }
+  
+  .text {
+    font-size: 0.7rem;
+    padding: 4px 6px;
+  }
+}
+

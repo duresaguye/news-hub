@@ -1,40 +1,36 @@
-# News Hub (Vite + React + TypeScript)
-
-This app integrates with NewsAPI to fetch real news content with a clean UI.
+# News Hub (Next.js 14 + TailwindCSS)
 
 ## Setup
 
-1) Install dependencies and copy environment file:
+1. Make sure you have your NewsAPI key.
+2. Create a `.env.local` in the root with:
 
 ```
-pnpm i
-cp .env.example .env
+NEWS_API_KEY=your_newsapi_key_here
 ```
 
-2) Edit `.env` and set your key:
+3. Install dependencies:
 
 ```
-VITE_NEWS_API_KEY=your_newsapi_key_here
+npm install
+# or
+pnpm install
 ```
 
-Get an API key from the NewsAPI site: `https://newsapi.org/`.
-
-3) Start dev server:
+4. Run dev server:
 
 ```
+npm run dev
+# or
 pnpm dev
 ```
 
-## NewsAPI usage
 
-- Home uses Top Headlines (e.g., `country=us`).
-- Trending uses Everything sorted by popularity (e.g., `q=technology&sortBy=popularity`).
-- Search uses Everything with query + filters and maps sortBy:
-  - recent -> publishedAt
-  - popular -> popularity
-  - relevant -> relevancy
-
-Reference endpoints from NewsAPI:
-- Top headlines: `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=API_KEY`
-- Everything: `https://newsapi.org/v2/everything?q=tesla&sortBy=publishedAt&apiKey=API_KEY`
+## Features
+- App Router structure (`src/app/`)
+- News fetching (via Next.js API routes to NewsAPI)
+- TailwindCSS styling
+- All UI components / pages migrated from React/Vite
+- Supports Home, Trending, World, Politics, Technology, Search views
+- Navbar uses next/link
 

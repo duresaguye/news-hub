@@ -1,11 +1,10 @@
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Bookmark, Share2, Clock, Eye } from "lucide-react"
 import { useMemo, useState } from "react"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useEverything } from "@/lib/newsHooks"
-import { useTopHeadlines } from "@/lib/newsHooks"
+import { useEverything, useTopHeadlines } from "@/lib/newsHooks"
+import Link from "next/link"
 
 interface SearchResultsProps {
   query: string
@@ -28,7 +27,6 @@ interface Article {
 }
 
 export default function SearchResults({ query, category, sortBy }: SearchResultsProps) {
-  const [openId, setOpenId] = useState<string | null>(null)
   const [bookmarked, setBookmarked] = useState<Set<string>>(new Set())
 
   const q = useMemo(() => {
@@ -113,10 +111,10 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
         <div className="grid gap-6">
           {sortedResults.map((result) => (
             <div key={result.id}>
-              <Card 
-                className="hover:shadow-md transition-all duration-200 cursor-pointer border group"
-                onClick={() => setOpenId(result.id)}
-              >
+              <Link href={result.url ? `/article/${encodeURIComponent(result.url)}` : '#'}>
+                <Card 
+                  className="hover:shadow-md transition-all duration-200 cursor-pointer border group"
+                >
                 <CardContent className="p-0">
                   <div className="flex flex-col sm:flex-row">
                     {/* Image */}
@@ -191,75 +189,7 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Enhanced Details Dialog */}
-              <Dialog open={openId === result.id} onOpenChange={(v) => !v && setOpenId(null)}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden">
-                  <div className="aspect-[21/9] w-full overflow-hidden bg-gray-100 relative">
-                    <img
-                      src={result.image}
-                      alt={result.title}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-6 left-6 right-6 text-white">
-                      <Badge className="bg-white/20 text-white border-0 backdrop-blur-sm mb-3">
-                        {result.category}
-                      </Badge>
-                      <DialogTitle className="text-2xl text-white mb-2">{result.title}</DialogTitle>
-                      <div className="flex items-center gap-4 text-white/80 text-sm">
-                        <span>{result.source}</span>
-                        <span>•</span>
-                        <span>{result.date}</span>
-                        {result.readTime && <><span>•</span><span>{result.readTime}</span></>}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 max-h-[60vh] overflow-y-auto">
-                    <div className="prose prose-lg max-w-none">
-                      <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                        {result.description}
-                      </p>
-                      
-                      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                        <h4 className="font-semibold text-gray-900 mb-2">About the Source</h4>
-                        <p className="text-gray-600 text-sm">
-                          {result.source} is a trusted news provider delivering accurate and timely information to readers worldwide.
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between pt-6 border-t">
-                        <div className="flex items-center gap-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => toggleBookmark(result.id, e)}
-                            className="gap-2"
-                          >
-                            <Bookmark 
-                              className={`w-4 h-4 ${bookmarked.has(result.id) ? 'fill-blue-600 text-blue-600' : ''}`} 
-                            />
-                            {bookmarked.has(result.id) ? 'Saved' : 'Save'}
-                          </Button>
-                          {result.url && (
-                            <a href={result.url} target="_blank" rel="noopener noreferrer">
-                              <Button variant="outline" size="sm" className="gap-2">
-                                <Share2 className="w-4 h-4" />
-                                Open Source
-                              </Button>
-                            </a>
-                          )}
-                        </div>
-                        <Button onClick={() => setOpenId(null)}>
-                          Close
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              </Link>
             </div>
           ))}
         </div>

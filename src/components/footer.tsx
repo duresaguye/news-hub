@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
@@ -64,7 +64,7 @@ export default function Footer() {
                   ].map((category) => (
                     <li key={category}>
                       <Link 
-                        to={`/category/${category.toLowerCase()}`}
+                        href={`/category/${category.toLowerCase()}`}
                         className="text-white/90 hover:text-[var(--brand-accent)] transition-colors block py-1"
                       >
                         {category}
@@ -88,7 +88,7 @@ export default function Footer() {
                   ].map((item) => (
                     <li key={item}>
                       <Link 
-                        to={`/${item.toLowerCase().replace(' ', '-')}`}
+                        href={`/${item.toLowerCase().replace(' ', '-')}`}
                         className="text-white/90 hover:text-[var(--brand-accent)] transition-colors block py-1"
                       >
                         {item}

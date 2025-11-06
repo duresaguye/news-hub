@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import { Link } from "react-router-dom"
+import Link from "next/link";
 import { Menu, X, Search, User, Bell, Bookmark, TrendingUp } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -13,7 +13,7 @@ export default function Navbar() {
     <nav className="bg-[var(--brand-primary)] text-white border-b-4 border-[var(--brand-accent)] sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-[var(--brand-accent)] rounded-lg flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-[var(--primary-foreground)]" />
           </div>
@@ -33,7 +33,7 @@ export default function Navbar() {
           ].map((item) => (
             <Link 
               key={item.name}
-              to={item.path} 
+              href={item.path} 
               className="text-white/90 hover:text-[var(--brand-accent)] font-medium transition-colors relative group py-2"
             >
               {item.name}
@@ -44,14 +44,14 @@ export default function Navbar() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-2">
-          <Link to="/search">
+          <Link href="/search">
             <Button variant="ghost" size="icon" className="text-white/90 hover:text-[var(--brand-accent)] hover:bg-white/10 rounded-full">
               <Search className="w-4 h-4" />
             </Button>
           </Link>
           
           
-          <Link to="/profile">
+          <Link href="/profile">
             <Button variant="ghost" size="icon" className="text-white/90 hover:text-[var(--brand-accent)] hover:bg-white/10 rounded-full">
               <User className="w-4 h-4" />
             </Button>
@@ -59,12 +59,12 @@ export default function Navbar() {
           
           <div className="h-6 w-px bg-white/20 mx-2"></div>
           
-          <Link to="/auth/login">
+          <Link href="/auth/login">
             <Button variant="outline" className="border-white/60 text-primary hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full px-4">
               Sign In
             </Button>
           </Link>
-          <Link to="/auth/register">
+          <Link href="/auth/register">
             <Button className="bg-[var(--brand-accent)] text-[var(--primary-foreground)] hover:brightness-110 rounded-full px-4 font-semibold">
               Subscribe
             </Button>
@@ -95,7 +95,7 @@ export default function Navbar() {
               ].map((item) => (
                 <Link 
                   key={item.name}
-                  to={item.path} 
+                  href={item.path} 
                   className="flex items-center gap-3 text-white/90 hover:text-[var(--brand-accent)] py-3 px-4 rounded-lg hover:bg-white/10 transition-all group"
                   onClick={() => setIsOpen(false)}
                 >
@@ -115,7 +115,7 @@ export default function Navbar() {
               ].map((item) => (
                 <Link 
                   key={item.name}
-                  to={item.path} 
+                  href={item.path} 
                   className="flex items-center gap-3 text-white/90 hover:text-[var(--brand-accent)] py-3 px-4 rounded-lg hover:bg-white/10 transition-all"
                   onClick={() => setIsOpen(false)}
                 >
@@ -127,12 +127,12 @@ export default function Navbar() {
 
             {/* Auth Buttons */}
             <div className="border-t border-white/20 pt-4 space-y-3">
-              <Link to="/auth/login" onClick={() => setIsOpen(false)}>
+              <Link href="/auth/login" onClick={() => setIsOpen(false)}>
                 <Button variant="outline" className="w-full border-white/60 text-white hover:text-[var(--brand-primary)] hover:bg-[var(--brand-accent)] hover:border-[var(--brand-accent)] rounded-full">
                   Sign In
                 </Button>
               </Link>
-              <Link to="/auth/register" onClick={() => setIsOpen(false)}>
+              <Link href="/auth/register" onClick={() => setIsOpen(false)}>
                 <Button className="w-full bg-[var(--brand-accent)] text-[var(--primary-foreground)] hover:brightness-110 rounded-full font-semibold">
                   Subscribe Now
                 </Button>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Clock, Eye, Bookmark, Share2 } from "lucide-react"
-import { Link } from "react-router-dom"
+import Link from "next/link"
 import { useState } from "react"
 
 const sampleArticles = [
@@ -138,9 +138,10 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {articlesToDisplay.map((article) => (
-          article.url ? (
-            <a key={article.id} href={article.url} target="_blank" rel="noopener noreferrer">
+        {articlesToDisplay.map((article) => {
+          const articleWithUrl = article as GridArticle;
+          return articleWithUrl.url ? (
+            <Link key={article.id} href={`/article/${encodeURIComponent(articleWithUrl.url)}`}>
               <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full border-0 shadow-sm group overflow-hidden">
                 <div className="relative overflow-hidden">
                   <img
@@ -213,82 +214,84 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                   </div>
                 </CardContent>
               </Card>
-            </a>
+            </Link>
           ) : (
-            <Link key={article.id} to={`/article/${article.id}`}>
-              <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full border-0 shadow-sm group overflow-hidden">
-                <div className="relative overflow-hidden">
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge className={`${
-                      article.isBreaking 
-                        ? 'bg-red-100 text-red-800 hover:bg-red-200' 
-                        : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                    }`}>
-                      {article.isBreaking ? 'Breaking' : article.category}
-                    </Badge>
+            <Link key={article.id} href={`/article/${encodeURIComponent(article.id)}`}>
+            <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full border-0 shadow-sm group overflow-hidden">
+              <div className="relative overflow-hidden">
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <Badge className={`${
+                    article.isBreaking 
+                      ? 'bg-red-100 text-red-800 hover:bg-red-200' 
+                      : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  }`}>
+                    {article.isBreaking ? 'Breaking' : article.category}
+                  </Badge>
+                </div>
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 bg-white/90 hover:bg-white"
+                    onClick={(e) => toggleBookmark(article.id, e)}
+                  >
+                    <Bookmark 
+                      className={`w-4 h-4 ${
+                        bookmarked.has(article.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
+                      }`} 
+                    />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/90 hover:bg-white">
+                    <Share2 className="w-4 h-4 text-gray-600" />
+                  </Button>
+                </div>
+              </div>
+              
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
+                  <span>{article.source}</span>
+                  <span>•</span>
+                  <span>{article.date}</span>
+                </div>
+                <CardTitle className="line-clamp-2 text-balance text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                  {article.title}
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="pt-0">
+                <CardDescription className="line-clamp-3 text-gray-600 leading-relaxed mb-4">
+                  {article.description}
+                </CardDescription>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{article.readTime}</span>
+                    </div>
+                      {typeof article.views === 'number' && (
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{article.views.toLocaleString()}</span>
+                    </div>
+                      )}
                   </div>
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 bg-white/90 hover:bg-white"
-                      onClick={(e) => toggleBookmark(article.id, e)}
-                    >
-                      <Bookmark 
-                        className={`w-4 h-4 ${
-                          bookmarked.has(article.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
-                        }`} 
-                      />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/90 hover:bg-white">
-                      <Share2 className="w-4 h-4 text-gray-600" />
-                    </Button>
+                  <div className="flex items-center gap-2 text-blue-600 group-hover:gap-3 transition-all">
+                    <span className="text-sm font-medium">Read</span>
+                    <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
-                
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
-                    <span>{article.source}</span>
-                    <span>•</span>
-                    <span>{article.date}</span>
-                  </div>
-                  <CardTitle className="line-clamp-2 text-balance text-lg leading-tight group-hover:text-blue-600 transition-colors">
-                    {article.title}
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="pt-0">
-                  <CardDescription className="line-clamp-3 text-gray-600 leading-relaxed mb-4">
-                    {article.description}
-                  </CardDescription>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{article.readTime}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4" />
-                        <span>{article.views.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-blue-600 group-hover:gap-3 transition-all">
-                      <span className="text-sm font-medium">Read</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </CardContent>
+              </CardContent>
               </Card>
             </Link>
-          )
-        ))}
+          );
+        })}
       </div>
 
       {displayCount < list.length && (
