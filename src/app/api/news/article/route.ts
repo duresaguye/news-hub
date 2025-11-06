@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     // Try to get the article directly by URL
     const response = await newsApi.getArticleByUrl(url);
     
-    if (response.articles?.length > 0) {
+    if (response && response.articles?.length > 0) {
       return NextResponse.json({ status: 'ok', article: response.articles[0] });
     }
 

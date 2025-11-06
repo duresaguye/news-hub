@@ -1,11 +1,10 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/auth/login/page": "app/auth/login/page.js",
-  "/profile/page": "app/profile/page.js",
-  "/search/page": "app/search/page.js",
-  "/trending/page": "app/trending/page.js",
-  "/api/news/top-headlines/route": "app/api/news/top-headlines/route.js",
-  "/api/news/everything/route": "app/api/news/everything/route.js",
   "/api/auth/[...all]/route": "app/api/auth/[...all]/route.js",
-  "/api/saved-articles/route": "app/api/saved-articles/route.js"
+  "/api/news/top-headlines/route": "app/api/news/top-headlines/route.js",
+  "/search/page": "app/search/page.js",
+  "/api/news/everything/route": "app/api/news/everything/route.js",
+  "/api/saved-articles/route": "app/api/saved-articles/route.js",
+  "/profile/page": "app/profile/page.js"
 }

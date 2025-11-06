@@ -17,7 +17,8 @@ export default function Home() {
       )}
       {!loading && error && (
         <div className="max-w-7xl mx-auto px-4 py-16">
-          <Empty title="Failed to load news" description={error} />
+          <Empty title="Failed to load news" />
+          <p className="mt-4 text-sm text-muted-foreground">{error}</p>
         </div>
       )}
       {!loading && !error && (

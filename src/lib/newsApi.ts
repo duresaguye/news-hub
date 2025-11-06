@@ -1,4 +1,5 @@
 export type NewsApiArticle = {
+  articles: any;
   source: { id: string | null; name: string };
   author: string | null;
   title: string;
@@ -33,12 +34,12 @@ async function doGet(path: string, params: Record<string, unknown> = {}): Promis
 }
 
 export type TopHeadlinesParams = {
-  country?: string; // e.g., 'us'
+  country?: string; 
   category?: string; // business, entertainment, general, health, science, sports, technology
   q?: string;
   pageSize?: number;
   page?: number;
-  sources?: string; // comma separated source ids
+  sources?: string; 
 };
 
 export async function fetchTopHeadlines(params: TopHeadlinesParams = {}): Promise<NewsApiResponse> {
@@ -78,6 +79,26 @@ export function mapNewsArticleToCard(a: NewsApiArticle) {
     isBreaking: false,
     url: a.url,
   };
+}
+
+// Add a minimal NewsApiClient so imports expecting it work.
+// This wraps the existing functions and provides a getArticleByUrl helper.
+export class NewsApiClient {
+  basePath = "/api/news";
+
+  async topHeadlines(params: TopHeadlinesParams = {}) {
+    return fetchTopHeadlines(params);
+  }
+
+  async everything(params: EverythingParams = {}) {
+    return fetchEverything(params);
+  }
+
+  // Returns the first matching article or null
+  async getArticleByUrl(url: string) {
+    const res = await doGet("/article", { url });
+    return res.articles && res.articles.length > 0 ? res.articles[0] : null;
+  }
 }
 
 

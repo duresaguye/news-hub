@@ -144,9 +144,7 @@ export default function ArticleDetailsPage() {
   if (error || !article) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <Empty title="Article not found">
-          {error || 'The article you are looking for could not be found.'}
-        </Empty>
+        <Empty title="Article not found" description={error || 'The article you are looking for could not be found.'} />
         <div className="mt-8 text-center">
           <Button onClick={() => router.back()} variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
