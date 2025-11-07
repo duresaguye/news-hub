@@ -49,7 +49,7 @@ export default function SavedArticles() {
               ? data.articles
               : [];
 
-        const normalized: SavedArticle[] = items.map((item) => ({
+        const normalized: SavedArticle[] = items.map((item:any) => ({
           id: item.id,
           title: item.title ?? 'Untitled article',
           source: item.source ?? 'Unknown source',
@@ -58,7 +58,7 @@ export default function SavedArticles() {
           urlToImage: item.imageUrl ?? item.urlToImage ?? undefined,
           description: item.description ?? undefined,
           category: item.category ?? undefined,
-        })).filter((item) => Boolean(item.url));
+        })).filter((item:any) => Boolean(item.url));
 
         setSavedArticles(normalized);
       } catch (err) {

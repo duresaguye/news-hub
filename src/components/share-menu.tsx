@@ -10,7 +10,7 @@ type ShareMenuProps = {
   shareUrl: string;
   title: string;
   description?: string | null;
-  children: React.ReactElement;
+  children: React.ReactElement<{ onClick?: (event: MouseEvent) => void }>;
 };
 
 const SHARE_TARGETS = [
@@ -171,4 +171,3 @@ export function ShareMenu({ shareUrl, title, description, children }: ShareMenuP
     </Popover>
   );
 }
-
