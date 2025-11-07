@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
-// Separate component that uses useSearchParams
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();

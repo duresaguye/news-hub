@@ -3,18 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search, User, LogOut, TrendingUp, ChevronDown } from "lucide-react";
+import { Menu, X, Search, User, LogOut, TrendingUp, Settings } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,47 +41,14 @@ export default function Navbar() {
 
   const isAuthenticated = !!session?.user;
 
-  // Simple dropdown component for authenticated users
-  const UserAccountDropdown = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center gap-2 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors px-3 border border-white/20"
-        >
-          <User className="w-4 h-4" />
-          <span className="text-sm">Account</span>
-          <ChevronDown className="w-3 h-3 text-white/70" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48" align="end">
-        <DropdownMenuLabel>
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">
-              {session?.user?.name || "User"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {session?.user?.email || ""}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/profile")}>
-          <User className="w-4 h-4 mr-2" />
-          <span>Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={handleLogout} 
-          disabled={isLoading}
-          className="text-red-600 focus:text-red-600"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          <span>{isLoading ? "Logging out..." : "Log out"}</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!session?.user?.name) return "U";
+    
+    const names = session.user.name.split(' ');
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+  };
 
   return (
     <motion.nav
@@ -130,7 +89,7 @@ export default function Navbar() {
         </div>
 
         {/* Auth + Actions */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
           <Link href="/search">
             <Button
               variant="ghost"
@@ -144,9 +103,45 @@ export default function Navbar() {
           {sessionLoading ? (
             <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
           ) : isAuthenticated ? (
-            <UserAccountDropdown />
+            <div className="flex items-center gap-1">
+              {/* Settings Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/profile")}
+                className="text-white/70 hover:text-[var(--brand-accent)] hover:bg-white/10 rounded-full"
+                title="Profile"
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+
+              {/* User Avatar */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/profile")}
+                className="rounded-full p-0 hover:bg-white/10 transition-all group"
+                title="Profile"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-[var(--brand-accent)] to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg group-hover:scale-105 transition-transform">
+                  {getUserInitials()}
+                </div>
+              </Button>
+
+              {/* Logout Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                disabled={isLoading}
+                className="text-white/70 hover:text-red-400 hover:bg-white/10 rounded-full"
+                title="Log out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center gap-2">
               <Link href="/auth/login">
                 <Button
                   variant="outline"
@@ -160,7 +155,7 @@ export default function Navbar() {
                   Subscribe
                 </Button>
               </Link>
-            </>
+            </div>
           )}
         </div>
 
@@ -208,23 +203,44 @@ export default function Navbar() {
 
             {isAuthenticated ? (
               <>
-                <div className="border-t border-white/20 pt-4 space-y-2">
-                  <Link
-                    href="/profile"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 text-white/90 hover:text-[var(--brand-accent)] py-3 px-4 rounded-lg hover:bg-white/10 transition-all"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Profile</span>
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoading}
-                    className="flex items-center gap-3 text-white/90 hover:text-red-400 py-3 px-4 rounded-lg hover:bg-white/10 transition-all w-full text-left disabled:opacity-50"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>{isLoading ? "Logging out..." : "Log out"}</span>
-                  </button>
+                {/* User Info in Mobile - Modern */}
+                <div className="border-t border-white/20 pt-4">
+                  <div className="flex items-center gap-3 px-4 py-2 mb-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-[var(--brand-accent)] to-purple-500 rounded-full flex items-center justify-center text-white font-semibold shadow-lg">
+                      {getUserInitials()}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-white">
+                        {session?.user?.name || "User"}
+                      </span>
+                      <span className="text-xs text-white/60">
+                        {session?.user?.email || ""}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 px-4">
+                    <Button
+                      onClick={() => {
+                        router.push("/profile");
+                        setIsOpen(false);
+                      }}
+                      variant="outline"
+                      className="border-white/20 text-white hover:bg-white/10 rounded-full"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Profile
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                      variant="outline"
+                      className="border-red-400/30 text-red-400 hover:bg-red-400/10 rounded-full"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {isLoading ? "..." : "Logout"}
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (
