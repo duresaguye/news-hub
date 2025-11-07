@@ -7,7 +7,6 @@ import {
   MapPin,
   Send,
   Shield,
-
 } from "lucide-react"
 import SocialCards from "./social-cards"
 
@@ -28,7 +27,7 @@ export default function Footer() {
 
             {/* Newsletter Subscription */}
             <div className="space-y-3">
-              <h4 className="font-semibold text-[var(--brand-accent)]">Stay Updated</h4>
+              <h4 className="font-extrabold text-white">Stay Updated</h4>
               <p className="text-white/70 text-sm">
                 Get the latest news delivered to your inbox
               </p>
@@ -52,7 +51,7 @@ export default function Footer() {
             <div className="grid grid-cols-2 gap-8">
               {/* Categories */}
               <div>
-                <h4 className="font-semibold text-[var(--brand-accent)] mb-4">Categories</h4>
+                <h4 className="font-extrabold text-white mb-4">Categories</h4>
                 <ul className="space-y-2 text-sm">
                   {[
                     "Politics",
@@ -65,7 +64,7 @@ export default function Footer() {
                     <li key={category}>
                       <Link 
                         href={`/category/${category.toLowerCase()}`}
-                        className="text-white/90 hover:text-[var(--brand-accent)] transition-colors block py-1"
+                        className="text-white/90 hover:text-[var(--brand-accent)] transition-colors duration-200 block py-1 hover:translate-x-1 transform"
                       >
                         {category}
                       </Link>
@@ -76,7 +75,7 @@ export default function Footer() {
 
               {/* Company */}
               <div>
-                <h4 className="font-semibold text-[var(--brand-accent)] mb-4">Company</h4>
+                <h4 className="font-extrabold text-white mb-4">Company</h4>
                 <ul className="space-y-2 text-sm">
                   {[
                     "About Us",
@@ -89,7 +88,7 @@ export default function Footer() {
                     <li key={item}>
                       <Link 
                         href={`/${item.toLowerCase().replace(' ', '-')}`}
-                        className="text-white/90 hover:text-[var(--brand-accent)] transition-colors block py-1"
+                        className="text-white/90 hover:text-[var(--brand-accent)] transition-colors duration-200 block py-1 hover:translate-x-1 transform"
                       >
                         {item}
                       </Link>
@@ -101,23 +100,23 @@ export default function Footer() {
 
             {/* Social Cards Section */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-[var(--brand-accent)] text-center md:text-left">Follow Us</h4>
+              <h4 className="font-extrabold text-white text-center md:text-left">Follow Us</h4>
               <div className="flex justify-center md:justify-start">
                 <SocialCards />
               </div>
               
               {/* Contact Info */}
               <div className="space-y-3 text-center md:text-left">
-                <div className="flex items-center gap-3 text-white/80 text-sm justify-center md:justify-start">
-                  <Phone className="w-4 h-4 text-[var(--brand-accent)]" />
+                <div className="flex items-center gap-3 text-white/80 text-sm justify-center md:justify-start hover:text-[var(--brand-accent)] transition-colors duration-200 group">
+                  <Phone className="w-4 h-4 text-white group-hover:text-[var(--brand-accent)] transition-colors duration-200" />
                   <span>+251 11 123 4567</span>
                 </div>
-                <div className="flex items-center gap-3 text-white/80 text-sm justify-center md:justify-start">
-                  <Mail className="w-4 h-4 text-[var(--brand-accent)]" />
+                <div className="flex items-center gap-3 text-white/80 text-sm justify-center md:justify-start hover:text-[var(--brand-accent)] transition-colors duration-200 group">
+                  <Mail className="w-4 h-4 text-white group-hover:text-[var(--brand-accent)] transition-colors duration-200" />
                   <span>contact@newshub.et</span>
                 </div>
-                <div className="flex items-start gap-3 text-white/80 text-sm justify-center md:justify-start">
-                  <MapPin className="w-4 h-4 text-[var(--brand-accent)] mt-0.5" />
+                <div className="flex items-start gap-3 text-white/80 text-sm justify-center md:justify-start hover:text-[var(--brand-accent)] transition-colors duration-200 group">
+                  <MapPin className="w-4 h-4 text-white mt-0.5 group-hover:text-[var(--brand-accent)] transition-colors duration-200" />
                   <span>Addis Ababa, Ethiopia</span>
                 </div>
               </div>
@@ -129,16 +128,19 @@ export default function Footer() {
         <div className="border-t border-white/15 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center">
             <div className="flex items-center gap-6 text-sm text-white/80">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[var(--brand-accent)]" />
+              <div className="flex items-center gap-2 hover:text-[var(--brand-accent)] transition-colors duration-200 group">
+                <Shield className="w-4 h-4 text-white group-hover:text-[var(--brand-accent)] transition-colors duration-200" />
                 <span>Trusted News Sources</span>
               </div>
-              
             </div>
             
             <div className="flex items-center gap-6 text-sm text-white/80">
-              <span className="font-semibold text-[var(--brand-accent)]">&copy; 2025 NewsHub</span>
-              <span>All rights reserved.</span>
+              <span className="font-extrabold text-white hover:text-[var(--brand-accent)] transition-colors duration-200 cursor-pointer">
+                &copy; 2025 NewsHub
+              </span>
+              <span className="hover:text-[var(--brand-accent)] transition-colors duration-200 cursor-pointer">
+                All rights reserved.
+              </span>
             </div>
           </div>
         </div>
