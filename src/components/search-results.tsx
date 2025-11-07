@@ -1,10 +1,13 @@
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Bookmark, Share2, Clock, Eye } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useMemo, type MouseEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useEverything, useTopHeadlines } from "@/lib/newsHooks"
 import Link from "next/link"
+import { useBookmarks } from "@/hooks/use-bookmarks"
+import { useToast } from "@/components/ui/use-toast"
+import { ShareMenu } from "@/components/share-menu"
 
 interface SearchResultsProps {
   query: string
@@ -27,7 +30,8 @@ interface Article {
 }
 
 export default function SearchResults({ query, category, sortBy }: SearchResultsProps) {
-  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set())
+  const { toast } = useToast()
+  const { isBookmarked, toggleBookmark, isMutating } = useBookmarks()
 
   const q = useMemo(() => {
     if (!query && category === "all") return "";
@@ -47,15 +51,27 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
 
   const results: Article[] = (data ?? []) as unknown as Article[]
 
-  const toggleBookmark = (id: string, e: React.MouseEvent) => {
+  const handleBookmarkClick = async (article: Article, e: MouseEvent) => {
+    e.preventDefault()
     e.stopPropagation()
-    const newBookmarked = new Set(bookmarked)
-    if (newBookmarked.has(id)) {
-      newBookmarked.delete(id)
-    } else {
-      newBookmarked.add(id)
+
+    if (!article.url) {
+      toast({
+        title: "Missing article URL",
+        description: "We couldn't find the original URL for this article.",
+        variant: "destructive",
+      })
+      return
     }
-    setBookmarked(newBookmarked)
+
+    await toggleBookmark({
+      url: article.url,
+      title: article.title,
+      source: article.source,
+      imageUrl: article.image,
+      description: article.description,
+      category: article.category,
+    })
   }
 
   const sortedResults = results
@@ -149,15 +165,27 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={(e) => toggleBookmark(result.id, e)}
+                            onClick={(e) => handleBookmarkClick(result, e)}
+                            disabled={isMutating(result.url)}
                           >
                             <Bookmark 
-                              className={`w-4 h-4 ${bookmarked.has(result.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'}`} 
+                              className={`w-4 h-4 ${isBookmarked(result.url) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'}`} 
                             />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Share2 className="w-4 h-4 text-gray-400" />
-                          </Button>
+                          <ShareMenu
+                            shareUrl={result.url ? `/article/${encodeURIComponent(result.url)}` : ''}
+                            title={result.title}
+                            description={result.description}
+                          >
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              disabled={!result.url}
+                            >
+                              <Share2 className="w-4 h-4 text-gray-400" />
+                            </Button>
+                          </ShareMenu>
                         </div>
                       </div>
                       

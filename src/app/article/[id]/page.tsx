@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { Empty } from '@/components/ui/empty';
+import { useBookmarks } from '@/hooks/use-bookmarks';
+import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, ExternalLink, Calendar, User, Bookmark, Share2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ShareMenu } from '@/components/share-menu';
 
 type NewsApiArticle = {
   source: { id: string | null; name: string };
@@ -29,7 +32,8 @@ export default function ArticleDetailsPage() {
   const [article, setArticle] = useState<NewsApiArticle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bookmarked, setBookmarked] = useState(false);
+  const { isBookmarked, toggleBookmark, isMutating } = useBookmarks();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Decode the article URL from the ID
@@ -111,26 +115,24 @@ export default function ArticleDetailsPage() {
     }
   }, [articleId]);
 
-  const toggleBookmark = () => {
-    setBookmarked(!bookmarked);
-    // TODO: Implement bookmark storage
-  };
-
-  const shareArticle = async () => {
-    if (navigator.share && article) {
-      try {
-        await navigator.share({
-          title: article.title,
-          text: article.description || '',
-          url: window.location.href,
-        });
-      } catch (err) {
-        // User cancelled or error
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
+  const handleBookmark = async () => {
+    if (!article?.url) {
+      toast({
+        title: 'Missing article URL',
+        description: 'We could not determine the source URL for this article.',
+        variant: 'destructive',
+      });
+      return;
     }
+
+    await toggleBookmark({
+      url: article.url,
+      title: article.title,
+      source: article.source.name,
+      imageUrl: article.urlToImage,
+      description: article.description,
+      publishedAt: article.publishedAt,
+    });
   };
 
   if (loading) {
@@ -154,6 +156,9 @@ export default function ArticleDetailsPage() {
       </div>
     );
   }
+
+  const isSaved = article.url ? isBookmarked(article.url) : false;
+  const bookmarkDisabled = article.url ? isMutating(article.url) : false;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -203,16 +208,23 @@ export default function ArticleDetailsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleBookmark}
-              className={bookmarked ? 'bg-blue-50 border-blue-200' : ''}
+              onClick={handleBookmark}
+              className={isSaved ? 'bg-blue-50 border-blue-200' : ''}
+              disabled={bookmarkDisabled}
             >
-              <Bookmark className={`w-4 h-4 mr-2 ${bookmarked ? 'fill-blue-600 text-blue-600' : ''}`} />
-              {bookmarked ? 'Saved' : 'Save'}
+              <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-blue-600 text-blue-600' : ''}`} />
+              {isSaved ? 'Saved' : 'Save'}
             </Button>
-            <Button variant="outline" size="sm" onClick={shareArticle}>
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
+            <ShareMenu
+              shareUrl={`/article/${encodeURIComponent(articleId)}`}
+              title={article.title}
+              description={article.description}
+            >
+              <Button variant="outline" size="sm">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            </ShareMenu>
             <Button variant="outline" size="sm" asChild>
               <a href={article.url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4 mr-2" />

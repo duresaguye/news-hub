@@ -40,7 +40,27 @@ export default function SavedArticles() {
         }
 
         const data = await response.json();
-        setSavedArticles(data.articles || []);
+
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.items)
+            ? data.items
+            : Array.isArray(data?.articles)
+              ? data.articles
+              : [];
+
+        const normalized: SavedArticle[] = items.map((item) => ({
+          id: item.id,
+          title: item.title ?? 'Untitled article',
+          source: item.source ?? 'Unknown source',
+          publishedAt: item.publishedAt ?? item.createdAt ?? new Date().toISOString(),
+          url: item.url,
+          urlToImage: item.imageUrl ?? item.urlToImage ?? undefined,
+          description: item.description ?? undefined,
+          category: item.category ?? undefined,
+        })).filter((item) => Boolean(item.url));
+
+        setSavedArticles(normalized);
       } catch (err) {
         console.error('Error fetching saved articles:', err);
         setError('Failed to load saved articles. Please try again.');

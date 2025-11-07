@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Clock, Eye, Bookmark, Share2 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, type MouseEvent } from "react"
+import { useToast } from "@/components/ui/use-toast"
+import { useBookmarks } from "@/hooks/use-bookmarks"
+import { ShareMenu } from "@/components/share-menu"
 
 const sampleArticles = [
   {
@@ -104,22 +107,34 @@ interface ArticleGridProps {
 
 export default function ArticleGrid({ articles, title, badgeText }: ArticleGridProps) {
   const [displayCount, setDisplayCount] = useState(6)
-  const [bookmarked, setBookmarked] = useState<Set<string>>(new Set(["1"]))
+  const { toast } = useToast()
+  const { isBookmarked, toggleBookmark, isMutating } = useBookmarks()
 
   const handleLoadMore = () => {
     setDisplayCount((prev) => prev + 6)
   }
 
-  const toggleBookmark = (id: string, e: React.MouseEvent) => {
+  const handleBookmarkClick = async (article: GridArticle, e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const newBookmarked = new Set(bookmarked)
-    if (newBookmarked.has(id)) {
-      newBookmarked.delete(id)
-    } else {
-      newBookmarked.add(id)
+
+    if (!article.url) {
+      toast({
+        title: "Missing article URL",
+        description: "We couldn't find the source URL for this article, so it can't be saved.",
+        variant: "destructive",
+      })
+      return
     }
-    setBookmarked(newBookmarked)
+
+    await toggleBookmark({
+      url: article.url,
+      title: article.title,
+      source: article.source,
+      imageUrl: article.image,
+      description: article.description,
+      category: article.category,
+    })
   }
 
   const list = (articles && articles.length > 0 ? articles : sampleArticles)
@@ -140,6 +155,11 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articlesToDisplay.map((article) => {
           const articleWithUrl = article as GridArticle;
+          const bookmarkKey = articleWithUrl.url ?? null;
+          const saved = isBookmarked(bookmarkKey);
+          const bookmarking = isMutating(bookmarkKey);
+          const shareTarget = articleWithUrl.url ?? articleWithUrl.id;
+          const sharePath = `/article/${encodeURIComponent(shareTarget)}`;
           return articleWithUrl.url ? (
             <Link key={article.id} href={`/article/${encodeURIComponent(articleWithUrl.url)}`}>
               <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full border-0 shadow-sm group overflow-hidden">
@@ -164,17 +184,28 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 bg-white/90 hover:bg-white"
-                      onClick={(e) => toggleBookmark(article.id, e)}
+                    onClick={(e) => handleBookmarkClick(articleWithUrl, e)}
+                    disabled={bookmarking}
                     >
                       <Bookmark 
                         className={`w-4 h-4 ${
-                          bookmarked.has(article.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
+                          saved ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
                         }`} 
                       />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/90 hover:bg-white">
+                  <ShareMenu
+                    shareUrl={sharePath}
+                    title={article.title}
+                    description={article.description}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 bg-white/90 hover:bg-white"
+                    >
                       <Share2 className="w-4 h-4 text-gray-600" />
                     </Button>
+                  </ShareMenu>
                   </div>
                 </div>
                 
@@ -239,17 +270,28 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 bg-white/90 hover:bg-white"
-                    onClick={(e) => toggleBookmark(article.id, e)}
+                    onClick={(e) => handleBookmarkClick(articleWithUrl, e)}
+                    disabled={bookmarking}
                   >
                     <Bookmark 
                       className={`w-4 h-4 ${
-                        bookmarked.has(article.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
+                        saved ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
                       }`} 
                     />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 bg-white/90 hover:bg-white">
-                    <Share2 className="w-4 h-4 text-gray-600" />
-                  </Button>
+                  <ShareMenu
+                    shareUrl={sharePath}
+                    title={article.title}
+                    description={article.description}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 bg-white/90 hover:bg-white"
+                    >
+                      <Share2 className="w-4 h-4 text-gray-600" />
+                    </Button>
+                  </ShareMenu>
                 </div>
               </div>
               
