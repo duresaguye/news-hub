@@ -9,10 +9,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { Empty } from '@/components/ui/empty';
 import { useBookmarks } from '@/hooks/use-bookmarks';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, ExternalLink, Calendar, User, Bookmark, Share2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Calendar, User, Bookmark, Share2, Facebook, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShareMenu } from '@/components/share-menu';
 
 type NewsApiArticle = {
   source: { id: string | null; name: string };
@@ -160,6 +159,35 @@ export default function ArticleDetailsPage() {
   const isSaved = article.url ? isBookmarked(article.url) : false;
   const bookmarkDisabled = article.url ? isMutating(article.url) : false;
 
+  const absoluteArticleUrl = (() => {
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+    try {
+      return new URL(`/article/${encodeURIComponent(articleId)}`, 'https://example.com').toString();
+    } catch {
+      return '';
+    }
+  })();
+
+  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(absoluteArticleUrl)}&title=${encodeURIComponent(article.title)}&summary=${encodeURIComponent(article.description ?? '')}`;
+  const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(absoluteArticleUrl)}`;
+  const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(absoluteArticleUrl)}&text=${encodeURIComponent(article.title)}`;
+
+  const copyShareLink = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(absoluteArticleUrl);
+        toast({ title: 'Link copied', description: 'Article link copied to your clipboard.' });
+      } else {
+        throw new Error('Clipboard not supported');
+      }
+    } catch (err) {
+      console.error('Copy failed', err);
+      toast({ title: 'Could not copy link', description: 'Please try again in a moment.', variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Back Button */}
@@ -215,16 +243,31 @@ export default function ArticleDetailsPage() {
               <Bookmark className={`w-4 h-4 mr-2 ${isSaved ? 'fill-blue-600 text-blue-600' : ''}`} />
               {isSaved ? 'Saved' : 'Save'}
             </Button>
-            <ShareMenu
-              shareUrl={`/article/${encodeURIComponent(articleId)}`}
-              title={article.title}
-              description={article.description}
-            >
-              <Button variant="outline" size="sm">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs uppercase tracking-wide text-muted-foreground mr-1">Share to:</span>
+              <Button variant="outline" size="sm" asChild>
+                <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" title="Share on LinkedIn" aria-label="Share on LinkedIn">
+                  <Linkedin className="w-4 h-4 mr-2" />
+                  LinkedIn
+                </a>
               </Button>
-            </ShareMenu>
+              <Button variant="outline" size="sm" asChild>
+                <a href={facebookUrl} target="_blank" rel="noopener noreferrer" title="Share on Facebook" aria-label="Share on Facebook">
+                  <Facebook className="w-4 h-4 mr-2" />
+                  Facebook
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <a href={twitterUrl} target="_blank" rel="noopener noreferrer" title="Share on X (Twitter)" aria-label="Share on X (Twitter)">
+                  <Twitter className="w-4 h-4 mr-2" />
+                  X
+                </a>
+              </Button>
+              <Button variant="outline" size="sm" onClick={copyShareLink} title="Copy article link" aria-label="Copy article link">
+                <LinkIcon className="w-4 h-4 mr-2" />
+                Copy Link
+              </Button>
+            </div>
             <Button variant="outline" size="sm" asChild>
               <a href={article.url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4 mr-2" />

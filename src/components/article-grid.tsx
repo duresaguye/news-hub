@@ -8,7 +8,6 @@ import Link from "next/link"
 import { useState, type MouseEvent } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useBookmarks } from "@/hooks/use-bookmarks"
-import { ShareMenu } from "@/components/share-menu"
 
 const sampleArticles = [
   {
@@ -193,19 +192,7 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                         }`} 
                       />
                     </Button>
-                  <ShareMenu
-                    shareUrl={sharePath}
-                    title={article.title}
-                    description={article.description}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 bg-white/90 hover:bg-white"
-                    >
-                      <Share2 className="w-4 h-4 text-gray-600" />
-                    </Button>
-                  </ShareMenu>
+                  {/* Share removed on cards as requested */}
                   </div>
                 </div>
                 
@@ -279,19 +266,7 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                       }`} 
                     />
                   </Button>
-                  <ShareMenu
-                    shareUrl={sharePath}
-                    title={article.title}
-                    description={article.description}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 bg-white/90 hover:bg-white"
-                    >
-                      <Share2 className="w-4 h-4 text-gray-600" />
-                    </Button>
-                  </ShareMenu>
+                  {/* Share removed on cards as requested */}
                 </div>
               </div>
               

@@ -10,7 +10,11 @@ type ShareMenuProps = {
   shareUrl: string;
   title: string;
   description?: string | null;
-  children: React.ReactElement<{ onClick?: (event: MouseEvent) => void }>;
+  children: React.ReactElement<{ 
+    onClick?: (event: MouseEvent) => void;
+    onMouseDown?: (event: MouseEvent) => void;
+    onKeyDown?: (event: React.KeyboardEvent) => void;
+  }>;
 };
 
 const SHARE_TARGETS = [
@@ -123,10 +127,24 @@ export function ShareMenu({ shareUrl, title, description, children }: ShareMenuP
   }
 
   const trigger = cloneElement(children, {
+    onMouseDown: (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      (children.props as any)?.onMouseDown?.(event);
+    },
     onClick: (event: MouseEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      setOpen((prev) => !prev);
       children.props.onClick?.(event);
+    },
+    onKeyDown: (event: React.KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.stopPropagation();
+        setOpen((prev) => !prev);
+      }
+      (children.props as any)?.onKeyDown?.(event);
     },
   });
 

@@ -7,7 +7,6 @@ import { useEverything, useTopHeadlines } from "@/lib/newsHooks"
 import Link from "next/link"
 import { useBookmarks } from "@/hooks/use-bookmarks"
 import { useToast } from "@/components/ui/use-toast"
-import { ShareMenu } from "@/components/share-menu"
 
 interface SearchResultsProps {
   query: string
@@ -172,20 +171,7 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                               className={`w-4 h-4 ${isBookmarked(result.url) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'}`} 
                             />
                           </Button>
-                          <ShareMenu
-                            shareUrl={result.url ? `/article/${encodeURIComponent(result.url)}` : ''}
-                            title={result.title}
-                            description={result.description}
-                          >
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              disabled={!result.url}
-                            >
-                              <Share2 className="w-4 h-4 text-gray-400" />
-                            </Button>
-                          </ShareMenu>
+                          {/* Share removed on cards as requested */}
                         </div>
                       </div>
                       
