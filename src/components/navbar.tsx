@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search, User, LogOut, TrendingUp, Settings, ChevronDown, Globe, MapPin, Radio } from "lucide-react";
+import { Menu, X, Search, User, LogOut, TrendingUp, Settings, ChevronDown, MapPin, Globe, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -52,40 +52,48 @@ export default function Navbar() {
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
   };
 
-  // Media outlets data - changes based on scope
+  // Media outlets data - only names
   const mediaOutlets = {
     local: [
-      { id: "fanabc", name: "Fana BC", logo: "📻", category: "Broadcast" },
-      { id: "walta", name: "Walta Media", logo: "📰", category: "Print" },
-      { id: "ethiopian", name: "Ethiopian News", logo: "🇪🇹", category: "National" },
-      { id: "ena", name: "ENA", logo: "⚡", category: "Official" },
-      { id: "aabc", name: "Ahadu BC", logo: "🎙️", category: "Private" },
-      { id: "ebs", name: "EBS TV", logo: "📺", category: "Broadcast" }
+      { id: "fanabc", name: "Fana BC", category: "Broadcast" },
+      { id: "addis-standard", name: "Addis Standard", category: "News" },
+      { id: "reporter-ethiopia", name: "The Reporter Ethiopia", category: "News" },
+      { id: "ethiopian-monitor", name: "Ethiopian Monitor", category: "News" },
+      { id: "ena", name: "ENA (Ethiopian News Agency)", category: "Official" }
     ],
     global: [
-      { id: "bbc", name: "BBC News", logo: "🇬🇧", category: "International" },
-      { id: "cnn", name: "CNN", logo: "🇺🇸", category: "International" },
-      { id: "aljazeera", name: "Al Jazeera", logo: "🇶🇦", category: "International" },
-      { id: "reuters", name: "Reuters", logo: "🌐", category: "Wire Service" },
-      { id: "ap", name: "Associated Press", logo: "📡", category: "Wire Service" },
-      { id: "dw", name: "Deutsche Welle", logo: "🇩🇪", category: "International" }
+      { id: "bbc", name: "BBC News", category: "International" },
+      { id: "cnn", name: "CNN", category: "International" },
+      { id: "aljazeera", name: "Al Jazeera", category: "International" },
+      { id: "reuters", name: "Reuters", category: "Wire Service" },
+      { id: "ap", name: "Associated Press", category: "Wire Service" },
+      { id: "dw", name: "Deutsche Welle", category: "International" }
     ]
-  };
+  } as const;
 
   const currentMediaOutlets = mediaOutlets[newsScope];
 
   const handleMediaSelect = (mediaId: string) => {
-    console.log("Selected media:", mediaId);
     setShowMediaDropdown(false);
-    router.push(`/news?source=${mediaId}&scope=${newsScope}`);
+    router.push(`/news?scope=${newsScope}&source=${mediaId}`);
   };
 
   const toggleNewsScope = () => {
     const newScope = newsScope === "local" ? "global" : "local";
     setNewsScope(newScope);
-    setShowMediaDropdown(false); // Close dropdown when switching scope
-    router.push(`/news?scope=${newScope}`);
+    setShowMediaDropdown(false);
+    const newSources = mediaOutlets[newScope];
+    const defaultSource = newSources[0]?.id;
+    router.push(`/news?scope=${newScope}&source=${defaultSource}`);
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlScope = params.get('scope');
+    if (urlScope === 'local' || urlScope === 'global') {
+      setNewsScope(urlScope);
+    }
+  }, []);
 
   return (
     <motion.nav
@@ -130,7 +138,7 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* Modern Toggle Switch */}
+          {/* Scope Toggle */}
           <motion.div 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -191,7 +199,7 @@ export default function Navbar() {
                   <div className="p-4 border-b border-white/10">
                     <div className="flex items-center justify-between">
                       <h3 className="font-black text-gray-800 text-sm uppercase tracking-wider">
-                        {newsScope === "local" ? "🇪🇹 Ethiopian Media" : "🌍 Global Media"}
+                        {newsScope === "local" ? "Ethiopian Media" : "Global Media"}
                       </h3>
                       <span className="text-xs font-semibold bg-gradient-to-r from-[var(--brand-accent)] to-cyan-500 text-white px-2 py-1 rounded-full">
                         {currentMediaOutlets.length} sources
@@ -199,32 +207,20 @@ export default function Navbar() {
                     </div>
                   </div>
                   
-                  <div className="max-h-96 overflow-y-auto">
-                    {currentMediaOutlets.map((media, index) => (
+                  <div className="py-1 max-h-96 overflow-y-auto">
+                    {currentMediaOutlets.map((media) => (
                       <motion.button
                         key={media.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
                         onClick={() => handleMediaSelect(media.id)}
-                        className="w-full flex items-center gap-4 px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[var(--brand-accent)]/10 hover:to-cyan-500/10 hover:text-gray-900 border-b border-white/10 last:border-b-0 group transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center justify-between transition-all group"
                       >
-                        <motion.span 
-                          className="text-2xl group-hover:scale-110 transition-transform"
-                          whileHover={{ scale: 1.2, rotate: 5 }}
-                        >
-                          {media.logo}
-                        </motion.span>
-                        <div className="flex-1 text-left">
-                          <div className="font-semibold text-sm group-hover:text-[var(--brand-accent)] transition-colors">
+                        <div className="flex flex-col">
+                          <div className="font-semibold text-gray-800 group-hover:text-[var(--brand-accent)]">
                             {media.name}
                           </div>
-                          <div className="text-xs text-gray-500 font-medium">{media.category}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">{media.category}</div>
                         </div>
-                        <motion.div
-                          whileHover={{ scale: 1.2 }}
-                          className="w-2 h-2 bg-gradient-to-r from-[var(--brand-accent)] to-cyan-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
                       </motion.button>
                     ))}
                   </div>
@@ -300,7 +296,7 @@ export default function Navbar() {
                 <Link href="/auth/login">
                   <Button
                     variant="outline"
-                    className="border-white/30 text-primary hover:text-white hover:bg-white/10 rounded-2xl px-6 font-semibold backdrop-blur-lg"
+                    className="border-white/30 text-primary hover:bg-white/10 rounded-2xl font-semibold"
                   >
                     Sign In
                   </Button>
@@ -308,7 +304,7 @@ export default function Navbar() {
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link href="/auth/register">
-                  <Button className="bg-gradient-to-r from-[var(--brand-accent)] to-cyan-500 text-white hover:brightness-110 rounded-2xl px-6 font-black shadow-lg shadow-[var(--brand-accent)]/30">
+                  <Button className="bg-gradient-to-r from-[var(--brand-accent)] to-cyan-500 text-white hover:brightness-110 rounded-2xl font-black shadow-lg shadow-[var(--brand-accent)]/30">
                     Subscribe
                   </Button>
                 </Link>
@@ -317,7 +313,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -398,22 +394,25 @@ export default function Navbar() {
               {/* Media Sources in Mobile */}
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
                 <h3 className="text-white font-black mb-3 text-sm uppercase tracking-wider">
-                  {newsScope === "local" ? "🇪🇹 Local Sources" : "🌍 Global Sources"}
+                  {newsScope === "local" ? "Local Sources" : "Global Sources"}
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {currentMediaOutlets.slice(0, 4).map((media) => (
+                <div className="space-y-2">
+                  {currentMediaOutlets.map((media) => (
                     <motion.button
                       key={media.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         handleMediaSelect(media.id);
                         setIsOpen(false);
                       }}
-                      className="flex items-center gap-2 text-white/90 hover:text-white py-2 px-3 rounded-xl hover:bg-white/10 transition-all text-sm font-semibold text-left"
+                      whileHover={{ scale: 1.02 }}
+                      className="w-full text-left px-4 py-3 text-sm hover:bg-white/10 rounded-xl transition-all group flex justify-between items-center"
                     >
-                      <span className="text-lg">{media.logo}</span>
-                      <span className="truncate">{media.name}</span>
+                      <div className="flex flex-col">
+                        <div className="font-semibold text-white group-hover:text-[var(--brand-accent)]">
+                          {media.name}
+                        </div>
+                        <div className="text-xs text-white/60 mt-0.5">{media.category}</div>
+                      </div>
                     </motion.button>
                   ))}
                 </div>
@@ -437,13 +436,9 @@ export default function Navbar() {
                       <div className="w-12 h-12 bg-gradient-to-br from-[var(--brand-accent)] to-purple-500 rounded-2xl flex items-center justify-center text-white font-black shadow-lg">
                         {getUserInitials()}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-white">
-                          {session?.user?.name || "User"}
-                        </span>
-                        <span className="text-xs text-white/60">
-                          {session?.user?.email || ""}
-                        </span>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">{session?.user?.name}</div>
+                        <div className="text-white/60 text-sm">{session?.user?.email}</div>
                       </div>
                     </div>
 
@@ -476,7 +471,7 @@ export default function Navbar() {
                   <Link href="/auth/login" onClick={() => setIsOpen(false)}>
                     <Button
                       variant="outline"
-                      className="w-full border-white/30 text-white hover:bg-white/10 rounded-2xl font-semibold"
+                      className="w-full border-white/30 text-primary hover:bg-white/10 rounded-2xl font-semibold"
                     >
                       Sign In
                     </Button>

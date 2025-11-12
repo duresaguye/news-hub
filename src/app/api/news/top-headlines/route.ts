@@ -1,45 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchNews } from '@/lib/newsService';
 
-const BASE_URL = 'https://newsapi.org/v2';
+// Map NewsAPI parameters to our service parameters
+function mapParams(searchParams: URLSearchParams): Record<string, string> {
+  const params: Record<string, string> = {};
+  
+  // Map country if provided
+  const country = searchParams.get('country');
+  if (country) {
+    params.country = country;
+  }
+  
+  // Map category if provided
+  const category = searchParams.get('category');
+  if (category) {
+    params.category = category;
+  }
+  
+  // Map search query if provided
+  const q = searchParams.get('q');
+  if (q) {
+    params.q = q;
+  }
+  
+  // Map page size if provided
+  const pageSize = searchParams.get('pageSize');
+  if (pageSize) {
+    params.pageSize = pageSize;
+  }
+  
+  return params;
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const apiKey = process.env.NEWS_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: 'NEWS_API_KEY is not configured' },
-      { status: 500 }
-    );
-  }
-
-  const params = new URLSearchParams();
-  searchParams.forEach((value, key) => {
-    if (value) params.append(key, value);
-  });
-  params.append('apiKey', apiKey);
-
+  
   try {
-    const response = await fetch(`${BASE_URL}/top-headlines?${params.toString()}`, {
-      headers: {
-        'User-Agent': 'NewsHub/1.0',
-      },
+    // Convert query parameters to our service's expected format
+    const params = mapParams(searchParams);
+    
+    // Fetch news using our service (with caching and fallback)
+    const newsData = await fetchNews(params);
+    
+    // Return the response in the same format as before
+    return NextResponse.json({
+      status: 'ok',
+      totalResults: newsData.articles.length,
+      articles: newsData.articles,
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      return NextResponse.json(
-        { error: errorData.message || errorData.error || 'Failed to fetch news', status: response.status },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
   } catch (error: any) {
-    console.error('NewsAPI Error:', error);
+    console.error('Error fetching news:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch news', details: error.toString() },
+      { 
+        status: 'error',
+        message: error.message || 'Failed to fetch news',
+        code: error.code,
+      },
       { status: 500 }
     );
   }

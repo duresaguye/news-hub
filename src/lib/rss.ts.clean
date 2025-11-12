@@ -1,0 +1,127 @@
+export interface RssFeedItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  image?: string;
+  source: string;
+  description?: string;
+  author?: string;
+  categories?: string[];
+  content?: string;
+  contentSnippet?: string;
+  guid?: string;
+  isoDate?: string;
+}
+
+export interface RssFeed {
+  items: RssFeedItem[];
+  title?: string;
+  description?: string;
+  link?: string;
+  language?: string;
+  image?: {
+    link?: string;
+    url: string;
+    title?: string;
+  };
+  copyright?: string;
+  lastBuildDate?: string;
+  updated?: string;
+  generator?: string;
+  feedUrl?: string;
+  paginationLinks?: {
+    self?: string;
+    first?: string;
+    last?: string;
+    next?: string;
+  };
+  itunes?: {
+    [key: string]: any;
+  };
+}
+
+// Type definitions
+type LocalSource = 'fanabc' | 'addis-standard' | 'reporter-ethiopia' | 'ethiopian-monitor' | 'ena';
+type GlobalSource = 'bbc' | 'cnn' | 'aljazeera' | 'reuters' | 'ap' | 'dw';
+type Scope = 'local' | 'global';
+
+interface RssFeeds {
+  local: Partial<Record<LocalSource, string>>;
+  global: Record<GlobalSource, string>;
+}
+
+// RSS Feed URLs
+export const rssFeeds: RssFeeds = {
+  local: {
+    'fanabc': 'https://www.fanabc.com/feed/',
+    'addis-standard': 'https://addisstandard.com/feed/',
+    'reporter-ethiopia': 'https://www.thereporterethiopia.com/feed/',
+    'ethiopian-monitor': 'https://ethiopianmonitor.com/feed/',
+    'ena': 'https://www.ena.et/feed/'
+  },
+  global: {
+    bbc: "https://feeds.bbci.co.uk/news/rss.xml",
+    cnn: "http://rss.cnn.com/rss/edition.rss",
+    aljazeera: "https://www.aljazeera.com/xml/rss/all.xml",
+    reuters: "http://feeds.reuters.com/reuters/topNews",
+    ap: "http://feeds.apnews.com/apf-topnews",
+    dw: "https://rss.dw.com/rdf/rss-en-all"
+  }
+};
+
+// Alternative feed URLs for fallback
+export const alternativeFeeds: Record<string, string[]> = {
+  'fanabc': ['https://www.fanabc.com/rss/'],
+  'addis-standard': ['https://addisstandard.com/rss/'],
+  'reporter-ethiopia': ['https://www.thereporterethiopia.com/rss/'],
+  'ethiopian-monitor': ['https://ethiopianmonitor.com/rss/'],
+  'ena': ['https://www.ena.et/rss/'],
+  'cnn': [
+    'http://rss.cnn.com/rss/edition_world.rss',
+    'https://rss.cnn.com/rss/edition.rss'
+  ],
+  'reuters': [
+    'http://feeds.reuters.com/reuters/worldNews',
+    'https://feeds.reuters.com/reuters/topNews'
+  ],
+  'ap': [
+    'http://feeds.apnews.com/apf-internationalnews',
+    'https://rss.ap.org/rss/topnews.xml'
+  ]
+};
+
+// Helper functions
+function extractFirstImageFromHtml(html: string | undefined): string | undefined {
+  if (!html) return undefined;
+  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return imgMatch ? imgMatch[1] : undefined;
+}
+
+function sanitizeDescription(desc: string | undefined): string {
+  if (!desc) return '';
+  return desc
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 200);
+}
+
+export function formatSourceName(source: string): string {
+  const nameMap: Record<string, string> = {
+    'fanabc': 'Fana BC',
+    'addis-standard': 'Addis Standard',
+    'reporter-ethiopia': 'Reporter Ethiopia',
+    'ethiopian-monitor': 'Ethiopian Monitor',
+    'ena': 'Ethiopian News Agency',
+    'bbc': 'BBC News',
+    'cnn': 'CNN',
+    'aljazeera': 'Al Jazeera',
+    'reuters': 'Reuters',
+    'ap': 'Associated Press',
+    'dw': 'Deutsche Welle'
+  };
+  return nameMap[source] || source.charAt(0).toUpperCase() + source.slice(1).replace(/-/g, ' ');
+}
+
+// Export types
+export type { LocalSource, GlobalSource, Scope };

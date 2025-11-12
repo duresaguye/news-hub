@@ -81,8 +81,6 @@ export function mapNewsArticleToCard(a: NewsApiArticle) {
   };
 }
 
-// Add a minimal NewsApiClient so imports expecting it work.
-// This wraps the existing functions and provides a getArticleByUrl helper.
 export class NewsApiClient {
   basePath = "/api/news";
 
