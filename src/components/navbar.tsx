@@ -12,6 +12,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [newsScope, setNewsScope] = useState<"local" | "global">("local");
   const router = useRouter();
 
@@ -248,47 +249,93 @@ export default function Navbar() {
             <div className="w-10 h-10 rounded-2xl bg-white/10 animate-pulse" />
           ) : isAuthenticated ? (
             <div className="flex items-center gap-2">
-              {/* Settings Button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => router.push("/profile")}
-                  className="text-white/70 hover:text-[var(--brand-accent)] hover:bg-white/10 rounded-2xl backdrop-blur-lg border border-white/10"
-                  title="Profile"
+              {/* User Profile Dropdown */}
+              <div className="relative">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center gap-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl pl-3 pr-2 py-1.5 hover:bg-white/15 transition-all group"
                 >
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </motion.div>
-
-              {/* User Avatar */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => router.push("/profile")}
-                  className="rounded-2xl p-0 hover:bg-white/10 transition-all group border border-white/10 backdrop-blur-lg"
-                  title="Profile"
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-[var(--brand-accent)] to-purple-500 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:shadow-xl group-hover:shadow-[var(--brand-accent)]/30 transition-all">
-                    {getUserInitials()}
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-[var(--brand-accent)] to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      {getUserInitials()}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-white font-semibold text-sm leading-tight max-w-[120px] truncate">
+                        {session?.user?.name?.split(' ')[0]}
+                      </div>
+                      <div className="text-white/60 text-xs leading-tight">
+                        {session?.user?.email?.split('@')[0]}
+                      </div>
+                    </div>
                   </div>
-                </Button>
-              </motion.div>
+                  <motion.div
+                    animate={{ rotate: showUserDropdown ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown className="w-4 h-4 text-white/70" />
+                  </motion.div>
+                </motion.button>
 
-              {/* Logout Button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleLogout}
-                  disabled={isLoading}
-                  className="text-white/70 hover:text-red-400 hover:bg-red-400/10 rounded-2xl backdrop-blur-lg border border-white/10"
-                  title="Log out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </motion.div>
+                <AnimatePresence>
+                  {showUserDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden z-50"
+                    >
+                      <div className="p-3 border-b border-white/10">
+                        <div className="font-semibold text-gray-800 text-sm truncate">
+                          {session?.user?.name}
+                        </div>
+                        <div className="text-gray-500 text-xs truncate">
+                          {session?.user?.email}
+                        </div>
+                      </div>
+                      
+                      <div className="py-1">
+                        <motion.button
+                          onClick={() => {
+                            router.push("/profile");
+                            setShowUserDropdown(false);
+                          }}
+                          whileHover={{ scale: 1.02 }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-all"
+                        >
+                          <User className="w-4 h-4" />
+                          My Profile
+                        </motion.button>
+                        
+                        <motion.button
+                          onClick={() => {
+                            router.push("/profile");
+                            setShowUserDropdown(false);
+                          }}
+                          whileHover={{ scale: 1.02 }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-all"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Settings
+                        </motion.button>
+                      </div>
+                      
+                      <div className="border-t border-white/10 p-1">
+                        <motion.button
+                          onClick={handleLogout}
+                          disabled={isLoading}
+                          whileHover={{ scale: 1.02 }}
+                          className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-all disabled:opacity-50"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          {isLoading ? "Signing out..." : "Sign Out"}
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-3">
@@ -296,7 +343,7 @@ export default function Navbar() {
                 <Link href="/auth/login">
                   <Button
                     variant="outline"
-                    className="border-white/30 text-primary hover:bg-white/10 rounded-2xl font-semibold"
+                    className="border-white/30 text-white hover:bg-white/10 rounded-2xl font-semibold"
                   >
                     Sign In
                   </Button>
