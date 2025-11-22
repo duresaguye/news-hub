@@ -320,7 +320,7 @@ export default function Navbar() {
                 <Link href="/auth/login">
                   <Button
                     variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10 rounded-2xl font-semibold"
+                    className="border-white/30 text-primary hover:bg-white/10 rounded-2xl font-semibold"
                   >
                     Sign In
                   </Button>
