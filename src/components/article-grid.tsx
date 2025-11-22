@@ -9,81 +9,6 @@ import { useState, type MouseEvent } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useBookmarks } from "@/hooks/use-bookmarks"
 
-const sampleArticles = [
-  {
-    id: "1",
-    title: "Ethiopia Announces Major Infrastructure Development Plan for 2025-2026",
-    description: "The government has unveiled a comprehensive $15 billion infrastructure development plan focusing on transportation, energy, and digital infrastructure across all regions.",
-    source: "Ethiopian News Agency",
-    date: "2 hours ago",
-    category: "Politics",
-    readTime: "4 min read",
-    views: 1247,
-    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800&auto=format&fit=crop",
-    isBreaking: true
-  },
-  {
-    id: "2",
-    title: "Tech Startups in Addis Ababa Secure Record $50M in Funding",
-    description: "Ethiopian tech startups have raised unprecedented funding this quarter, signaling growing investor confidence in the country's digital economy.",
-    source: "Tech Tribune Africa",
-    date: "5 hours ago",
-    category: "Technology",
-    readTime: "3 min read",
-    views: 892,
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop",
-    isBreaking: false
-  },
-  {
-    id: "3",
-    title: "Agricultural Innovations Boost Crop Yields by 40% in Pilot Regions",
-    description: "New sustainable farming techniques and technology adoption are transforming agricultural productivity in Ethiopia's rural communities.",
-    source: "Agriculture Today",
-    date: "1 day ago",
-    category: "Agriculture",
-    readTime: "5 min read",
-    views: 1563,
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=800&auto=format&fit=crop",
-    isBreaking: false
-  },
-  {
-    id: "4",
-    title: "National Football Team Qualifies for Continental Championship Finals",
-    description: "In a stunning comeback victory, Ethiopia's national team secures their spot in the African Cup of Nations finals after a decade-long absence.",
-    source: "Sports Daily Ethiopia",
-    date: "3 hours ago",
-    category: "Sports",
-    readTime: "2 min read",
-    views: 2341,
-    image: "https://images.unsplash.com/photo-1459865264687-595d652de67e?q=80&w=800&auto=format&fit=crop",
-    isBreaking: true
-  },
-  {
-    id: "5",
-    title: "New Economic Policy Aims to Boost Foreign Investment",
-    description: "The government introduces sweeping reforms to attract international businesses and stimulate economic growth across key sectors.",
-    source: "Business Ethiopia",
-    date: "6 hours ago",
-    category: "Business",
-    readTime: "4 min read",
-    views: 987,
-    image: "https://images.unsplash.com/photo-1665686374006-b8f04cf62d57?q=80&w=800&auto=format&fit=crop",
-    isBreaking: false
-  },
-  {
-    id: "6",
-    title: "Healthcare Initiative Reaches 1 Million Rural Residents",
-    description: "A nationwide healthcare program has successfully provided medical services to remote communities, improving access to quality care.",
-    source: "Health Watch",
-    date: "1 day ago",
-    category: "Health",
-    readTime: "3 min read",
-    views: 756,
-    image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?q=80&w=800&auto=format&fit=crop",
-    isBreaking: false
-  }
-]
-
 type GridArticle = {
   id: string
   title: string
@@ -95,7 +20,7 @@ type GridArticle = {
   views?: number
   image: string
   isBreaking?: boolean
-  url?: string
+  url?: string | null
 }
 
 interface ArticleGridProps {
@@ -108,6 +33,8 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
   const [displayCount, setDisplayCount] = useState(6)
   const { toast } = useToast()
   const { isBookmarked, toggleBookmark, isMutating } = useBookmarks()
+  // Add: Track expanded cards by id
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   const handleLoadMore = () => {
     setDisplayCount((prev) => prev + 6)
@@ -117,17 +44,8 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
     e.preventDefault()
     e.stopPropagation()
 
-    if (!article.url) {
-      toast({
-        title: "Missing article URL",
-        description: "We couldn't find the source URL for this article, so it can't be saved.",
-        variant: "destructive",
-      })
-      return
-    }
-
     await toggleBookmark({
-      url: article.url,
+      url: article.url ?? article.id,
       title: article.title,
       source: article.source,
       imageUrl: article.image,
@@ -136,7 +54,12 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
     })
   }
 
-  const list = (articles && articles.length > 0 ? articles : sampleArticles)
+  // Add this
+  const toggleExpanded = (id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const list = articles && articles.length > 0 ? articles : []
   const articlesToDisplay = list.slice(0, displayCount)
 
   return (
@@ -151,24 +74,34 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {list.length === 0 ? (
+        <div className="py-16 text-center text-white/70">
+          No articles available yet. Please check back soon.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articlesToDisplay.map((article) => {
-          const articleWithUrl = article as GridArticle;
-          const bookmarkKey = articleWithUrl.url ?? null;
-          const saved = isBookmarked(bookmarkKey);
-          const bookmarking = isMutating(bookmarkKey);
-          const shareTarget = articleWithUrl.url ?? articleWithUrl.id;
-          const sharePath = `/article/${encodeURIComponent(shareTarget)}`;
-          return articleWithUrl.url ? (
-            <Link key={article.id} href={`/article/${encodeURIComponent(articleWithUrl.url)}`}>
+          const articleWithUrl = article as GridArticle
+          const bookmarkKey = articleWithUrl.url ?? articleWithUrl.id
+          const saved = isBookmarked(bookmarkKey)
+          const bookmarking = isMutating(bookmarkKey)
+          const isExpanded = expanded[article.id]
+          return (
+            <Link key={article.id} href={`/article/${encodeURIComponent(article.id)}`}>
               <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full border-0 shadow-sm group overflow-hidden">
                 <div className="relative overflow-hidden">
+                  {article.image ? (
                   <img
                     src={article.image}
                     alt={article.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />
+                  ) : (
+                    <div className="w-full h-48 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-white/70 text-sm">
+                      No image
+                    </div>
+                  )}
                   <div className="absolute top-3 left-3 flex gap-2">
                     <Badge className={`${
                       article.isBreaking 
@@ -192,10 +125,8 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                         }`} 
                       />
                     </Button>
-                  {/* Share removed on cards as requested */}
                   </div>
                 </div>
-                
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
                     <span>{article.source}</span>
@@ -206,12 +137,22 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                     {article.title}
                   </CardTitle>
                 </CardHeader>
-                
                 <CardContent className="pt-0">
-                  <CardDescription className="line-clamp-3 text-gray-600 leading-relaxed mb-4">
-                    {article.description}
+                  {/* Only show first 100 chars if not expanded, otherwise full description */}
+                  <CardDescription className="text-gray-600 leading-relaxed mb-4 line-clamp-3">
+                    {isExpanded ? article.description : `${article.description?.slice(0, 100)}${article.description && article.description.length > 100 ? '...' : ''}`}
                   </CardDescription>
-                  
+                  <div className="flex items-center gap-2 mb-4">
+                    {article.description && article.description.length > 100 && (
+                      <Button type="button" size="sm" variant="outline" onClick={(e) => {
+                        e.preventDefault(); // don't navigate link
+                        e.stopPropagation();
+                        toggleExpanded(article.id)
+                      }}>
+                        {isExpanded ? 'Show Less' : 'More'}
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <div className="flex items-center gap-1">
@@ -233,85 +174,11 @@ export default function ArticleGrid({ articles, title, badgeText }: ArticleGridP
                 </CardContent>
               </Card>
             </Link>
-          ) : (
-            <Link key={article.id} href={`/article/${encodeURIComponent(article.id)}`}>
-            <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer h-full border-0 shadow-sm group overflow-hidden">
-              <div className="relative overflow-hidden">
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <Badge className={`${
-                    article.isBreaking 
-                      ? 'bg-red-100 text-red-800 hover:bg-red-200' 
-                      : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                  }`}>
-                    {article.isBreaking ? 'Breaking' : article.category}
-                  </Badge>
-                </div>
-                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 bg-white/90 hover:bg-white"
-                    onClick={(e) => handleBookmarkClick(articleWithUrl, e)}
-                    disabled={bookmarking}
-                  >
-                    <Bookmark 
-                      className={`w-4 h-4 ${
-                        saved ? 'fill-blue-600 text-blue-600' : 'text-gray-600'
-                      }`} 
-                    />
-                  </Button>
-                  {/* Share removed on cards as requested */}
-                </div>
-              </div>
-              
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3 text-sm text-gray-500 mb-2">
-                  <span>{article.source}</span>
-                  <span>•</span>
-                  <span>{article.date}</span>
-                </div>
-                <CardTitle className="line-clamp-2 text-balance text-lg leading-tight group-hover:text-blue-600 transition-colors">
-                  {article.title}
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <CardDescription className="line-clamp-3 text-gray-600 leading-relaxed mb-4">
-                  {article.description}
-                </CardDescription>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{article.readTime}</span>
-                    </div>
-                      {typeof article.views === 'number' && (
-                    <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4" />
-                      <span>{article.views.toLocaleString()}</span>
-                    </div>
-                      )}
-                  </div>
-                  <div className="flex items-center gap-2 text-blue-600 group-hover:gap-3 transition-all">
-                    <span className="text-sm font-medium">Read</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </CardContent>
-              </Card>
-            </Link>
-          );
+          )
         })}
       </div>
-
-      {displayCount < list.length && (
+      )}
+      {list.length > 0 && displayCount < list.length && (
         <div className="text-center mt-16">
           <Button 
             onClick={handleLoadMore} 

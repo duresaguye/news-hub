@@ -10,8 +10,7 @@
     "lint": "next lint",
     "setup": "node scripts/setup-local.js",
     "prisma:generate": "echo 'Using local Prisma setup'",
-    "news:cron": "tsx scripts/cron-news-fetch.ts",
-    "rss:check": "tsx scripts/rss-feed-health-check.ts"
+    "news:cron": "tsx scripts/cron-news-fetch.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

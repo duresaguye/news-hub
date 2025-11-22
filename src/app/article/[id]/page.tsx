@@ -13,96 +13,59 @@ import { ArrowLeft, ExternalLink, Calendar, User, Bookmark, Share2, Facebook, Li
 import Image from 'next/image';
 import Link from 'next/link';
 
-type NewsApiArticle = {
-  source: { id: string | null; name: string };
-  author: string | null;
-  title: string;
-  description: string | null;
-  url: string;
-  urlToImage: string | null;
-  publishedAt: string;
-  content: string | null;
-};
+import type { NewsApiArticle } from '@/lib/newsApi';
 
 export default function ArticleDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const articleId = params.id as string;
-  const [article, setArticle] = useState<NewsApiArticle | null>(null);
+  const [article, setArticle] = useState<NewsApiArticle & { documentId?: string; content?: any } | null>(null);
+  const [articleContent, setArticleContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isBookmarked, toggleBookmark, isMutating } = useBookmarks();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Decode the article URL from the ID
-    const decodedUrl = decodeURIComponent(articleId);
-    
-    // Fetch article by searching for it using the URL
     async function fetchArticle() {
       try {
         setLoading(true);
-        
-        // First try to fetch the specific article by its URL
-        try {
-          const response = await fetch(`/api/news/article?url=${encodeURIComponent(decodedUrl)}`);
-          const data = await response.json();
+        const response = await fetch(`/api/news/article?id=${encodeURIComponent(articleId)}`);
+        const data = await response.json();
+        if (data.article) {
+          setArticle(data.article);
           
-          if (data.article) {
-            setArticle(data.article);
-            return;
+          // Handle different content formats
+          let contentText = '';
+          
+          if (Array.isArray(data.article.content)) {
+            // Handle content as array of blocks
+            contentText = data.article.content
+              .map((block: any) => {
+                if (block.children && Array.isArray(block.children)) {
+                  return block.children.map((child: any) => child.text || '').join(' ');
+                }
+                return '';
+              })
+              .filter((text: string) => text.trim() !== '')
+              .join('\n\n');
+          } else if (typeof data.article.content === 'string') {
+            // Handle content as plain string
+            contentText = data.article.content;
+          } else if (data.article.description) {
+            // Fallback to description if content is not available
+            contentText = data.article.description;
+          } else {
+            contentText = 'No content available';
           }
-        } catch (err) {
-          console.error('Error fetching specific article:', err);
-        }
-        
-        // If specific article fetch fails, try searching by domain
-        try {
-          const url = new URL(decodedUrl);
-          const domain = url.hostname.replace('www.', '');
           
-          const searchResponse = await fetch(`/api/news/everything?domains=${domain}&pageSize=50`);
-          const searchData = await searchResponse.json();
-          
-          if (searchData.articles?.length > 0) {
-            // Try to find a matching article by URL or title
-            const foundArticle = searchData.articles.find(
-              (a: NewsApiArticle) => 
-                a.url === decodedUrl || 
-                a.title.toLowerCase() === new URL(decodedUrl).pathname.split('/').pop()?.toLowerCase()
-            );
-            
-            if (foundArticle) {
-              setArticle(foundArticle);
-              return;
-            }
-            
-            // If no exact match, use the first article from the domain
-            setArticle({
-              ...searchData.articles[0],
-              url: decodedUrl, // Keep the original URL
-            });
-            return;
-          }
-        } catch (err) {
-          console.error('Error searching articles by domain:', err);
+          setArticleContent(contentText);
+          return;
         }
-        
-        // If all else fails, create a minimal article object
-        const url = new URL(decodedUrl);
-        const domain = url.hostname.replace('www.', '');
-        
-        setArticle({
-          source: { id: null, name: domain },
-          author: null,
-          title: url.pathname.split('/').pop()?.replace(/-/g, ' ') || 'Article',
-          description: `Read the full article on ${domain}`,
-          url: decodedUrl,
-          urlToImage: null,
-          publishedAt: new Date().toISOString(),
-          content: null,
-        });
+
+        setError('Article not found');
       } catch (err: any) {
+        console.error('Error fetching specific article:', err);
         setError(err.message || 'Failed to load article');
       } finally {
         setLoading(false);
@@ -115,20 +78,20 @@ export default function ArticleDetailsPage() {
   }, [articleId]);
 
   const handleBookmark = async () => {
-    if (!article?.url) {
+    if (!article) {
       toast({
         title: 'Missing article URL',
-        description: 'We could not determine the source URL for this article.',
+        description: 'We could not determine the source for this article.',
         variant: 'destructive',
       });
       return;
     }
 
     await toggleBookmark({
-      url: article.url,
+      url: article.url || article.permalink || String(article.id),
       title: article.title,
-      source: article.source.name,
-      imageUrl: article.urlToImage,
+      source: article.source?.name || 'Unknown',
+      imageUrl: article.imageUrl,
       description: article.description,
       publishedAt: article.publishedAt,
     });
@@ -156,8 +119,9 @@ export default function ArticleDetailsPage() {
     );
   }
 
-  const isSaved = article.url ? isBookmarked(article.url) : false;
-  const bookmarkDisabled = article.url ? isMutating(article.url) : false;
+  const bookmarkKey = article?.url ?? article?.id ?? '';
+  const isSaved = bookmarkKey ? isBookmarked(bookmarkKey) : false;
+  const bookmarkDisabled = bookmarkKey ? isMutating(bookmarkKey) : false;
 
   const absoluteArticleUrl = (() => {
     if (typeof window !== 'undefined') {
@@ -204,16 +168,10 @@ export default function ArticleDetailsPage() {
         {/* Header */}
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <Badge variant="secondary">{article.source.name}</Badge>
-            {article.author && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4" />
-                <span>{article.author}</span>
-              </div>
-            )}
+            <Badge variant="secondary">News Hub</Badge>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>{new Date(article.publishedAt).toLocaleDateString('en-US', {
+              <span>{new Date(article.publishedAt || article.createdAt || Date.now()).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -225,9 +183,9 @@ export default function ArticleDetailsPage() {
             {article.title}
           </h1>
 
-          {article.description && (
+          {article.content[0]?.children[0]?.text && (
             <p className="text-xl text-muted-foreground mb-6">
-              {article.description}
+              {article.content[0].children[0].text}
             </p>
           )}
 
@@ -268,28 +226,19 @@ export default function ArticleDetailsPage() {
                 Copy Link
               </Button>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <a href={article.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Read on Source
-              </a>
+            <Button variant="outline" size="sm" disabled title="Source link not available">
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Read on Source
             </Button>
           </div>
         </header>
 
-        {/* Featured Image */}
-        {article.urlToImage && (
-          <div className="mb-8 rounded-lg overflow-hidden">
-            <Image
-              src={article.urlToImage}
-              alt={article.title}
-              width={1200}
-              height={600}
-              className="w-full h-auto object-cover"
-              unoptimized
-            />
+        {/* Featured Image - Using placeholder since the new API doesn't provide images */}
+        <div className="mb-8 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+          <div className="w-full aspect-video flex items-center justify-center text-gray-400">
+            <span>No image available</span>
           </div>
-        )}
+        </div>
 
         {/* Content */}
         <Card className="mb-8">
@@ -297,22 +246,20 @@ export default function ArticleDetailsPage() {
             {article.content || article.description ? (
               <div className="space-y-6">
                 {/* Show description as a lead-in */}
-                {article.description && (
+                {article.content[0]?.children[0]?.text && (
                   <div className="prose prose-lg max-w-none dark:prose-invert">
                     <p className="text-xl font-light leading-relaxed text-muted-foreground">
-                      {article.description}
+                      {article.content[0].children[0].text}
                     </p>
                   </div>
                 )}
                 
                 {/* Main content */}
-                {article.content && (
-                  <div className="prose prose-lg max-w-none dark:prose-invert">
-                    {article.content
-                      .replace(/\[.*?\]/g, '') // Remove citations like [1234 chars]
-                      .replace(/\+\d+.*/g, '') // Remove "+123 more chars"
+                {articleContent && (
+                  <div className="prose max-w-none dark:prose-invert prose-lg">
+                    {articleContent
                       .split('\n')
-                      .filter(para => para.trim().length > 0) // Remove empty paragraphs
+                      .filter(para => para.trim().length > 0)
                       .map((para, index) => (
                         <p key={index} className="mb-4 leading-relaxed">
                           {para.trim()}
@@ -322,23 +269,31 @@ export default function ArticleDetailsPage() {
                 )}
                 
                 {/* Source link */}
-                <div className="mt-8 p-4 bg-muted/30 rounded-lg border border-muted">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    This article was originally published on {new URL(article.url).hostname}. 
-                    Read the full story with additional details and media:
-                  </p>
-                  <Button variant="outline" asChild>
-                    <a 
-                      href={article.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Continue reading on {article.source.name}
-                    </a>
-                  </Button>
-                </div>
+                {article.url && (
+                  <div className="mt-8 p-4 bg-muted/30 rounded-lg border border-muted">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      This article was originally published on {(() => {
+                        try {
+                          return new URL(article.url).hostname;
+                        } catch {
+                          return article.source.name;
+                        }
+                      })()}. 
+                      Read the full story with additional details and media:
+                    </p>
+                    <Button variant="outline" asChild>
+                      <a 
+                        href={article.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Continue reading on {article.source.name}
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-6">
@@ -347,18 +302,8 @@ export default function ArticleDetailsPage() {
                     We couldn't load the full content of this article, but you can read it directly on the source website.
                   </p>
                 </div>
-                <div className="p-4 bg-muted/30 rounded-lg border border-muted">
-                  <Button asChild>
-                    <a 
-                      href={article.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Read Full Article on {article.source.name}
-                    </a>
-                  </Button>
+                <div className="mt-8 pt-4 border-t border-border text-sm text-muted-foreground">
+                  Source: News Hub
                 </div>
               </div>
             )}
@@ -371,12 +316,14 @@ export default function ArticleDetailsPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to News
           </Button>
-          <Button asChild>
-            <a href={article.url} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Visit Source
-            </a>
-          </Button>
+          {article.url && (
+            <Button asChild>
+              <a href={article.url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Visit Source
+              </a>
+            </Button>
+          )}
         </div>
       </article>
     </div>

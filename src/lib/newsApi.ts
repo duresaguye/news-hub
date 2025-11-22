@@ -1,19 +1,23 @@
 export type NewsApiArticle = {
-  articles: any;
-  source: { id: string | null; name: string };
-  author: string | null;
+  id: string;
   title: string;
   description: string | null;
-  url: string;
-  urlToImage: string | null;
-  publishedAt: string; // ISO
+  url: string | null;
+  permalink: string;
+  imageUrl: string | null;
+  publishedAt: string;
+  createdAt?: string;
   content: string | null;
+  source: { id: string | null; name: string };
+  category?: string | null;
 };
 
 export type NewsApiResponse = {
   status: string;
-  totalResults: number;
-  articles: NewsApiArticle[];
+  totalResults?: number;
+  articles?: NewsApiArticle[];
+  data?: any[];
+  [key: string]: any; // Allow for additional properties
 };
 
 async function doGet(path: string, params: Record<string, unknown> = {}): Promise<NewsApiResponse> {
@@ -34,12 +38,16 @@ async function doGet(path: string, params: Record<string, unknown> = {}): Promis
 }
 
 export type TopHeadlinesParams = {
-  country?: string; 
-  category?: string; // business, entertainment, general, health, science, sports, technology
+  tenantId?: string;
+  categoryId?: string;
+  dateGt?: string;
   q?: string;
+  search?: string;
+  country?: string;
+  category?: string;
+  sources?: string;
   pageSize?: number;
   page?: number;
-  sources?: string; 
 };
 
 export async function fetchTopHeadlines(params: TopHeadlinesParams = {}): Promise<NewsApiResponse> {
@@ -47,16 +55,14 @@ export async function fetchTopHeadlines(params: TopHeadlinesParams = {}): Promis
 }
 
 export type EverythingParams = {
-  q?: string; // keywords or phrases
-  qInTitle?: string;
-  searchIn?: string; // title,description,content
-  sources?: string;
+  tenantId?: string;
+  categoryId?: string;
+  dateGt?: string;
+  q?: string;
+  search?: string;
+  language?: string;
+  sortBy?: string;
   domains?: string;
-  excludeDomains?: string;
-  from?: string; // ISO date
-  to?: string; // ISO date
-  language?: string; // en, es, etc
-  sortBy?: "relevancy" | "popularity" | "publishedAt";
   pageSize?: number;
   page?: number;
 };
@@ -66,18 +72,62 @@ export async function fetchEverything(params: EverythingParams = {}): Promise<Ne
 }
 
 export function mapNewsArticleToCard(a: NewsApiArticle) {
+  // allow loose access to custom backend fields
+  const aAny = a as any;
+  
+  // Extract title with fallbacks
+  const title = a.title || aAny.Title || aAny.title || 'Untitled';
+  
+  // Extract description with multiple fallbacks
+  let description = a.description || '';
+  if (!description) {
+    if (Array.isArray(aAny.content)) {
+      description = aAny.content
+        .map((paragraph: any) =>
+          Array.isArray(paragraph?.children)
+            ? paragraph.children.map((child: any) => child.text || '').join(' ').trim()
+            : ''
+        )
+        .filter((text: string) => text)
+        .join('\n\n');
+    } else if (typeof aAny.content === 'string') {
+      description = aAny.content;
+    }
+  }
+  
+  // Final fallbacks for description
+  description = description || aAny.Summary || aAny.summary || aAny.Content || '';
+  
+  // Ensure we have a valid source name
+  const sourceName = 
+    (a.source?.name || aAny.source?.name || 
+     aAny.Source?.name || aAny.source || 'Unknown').toString();
+  
+  // Format the date
+  const date = a.publishedAt || aAny.publishedAt || aAny.Date;
+  const formattedDate = date ? new Date(date).toLocaleString() : '';
+  
+  // Get category with fallback
+  const category = a.category || aAny.Category || aAny.category || 'News';
+  
+  // Get image URL with fallback
+  const imageUrl = a.imageUrl || aAny.Image?.url || aAny.imageUrl || '';
+  
+  // Ensure we have a valid URL
+  const url = a.permalink || a.url || `/article/${encodeURIComponent(a.id)}`;
+
   return {
-    id: a.url, // use url as unique id
-    title: a.title,
-    description: a.description ?? "",
-    source: a.source?.name ?? "Unknown",
-    date: new Date(a.publishedAt).toLocaleString(),
-    category: "News",
+    id: a.id || String(Math.random()),
+    title: title,
+    description: description.toString(),
+    source: sourceName,
+    date: formattedDate,
+    category: category,
     readTime: undefined,
     views: undefined,
-    image: a.urlToImage || "",
+    image: imageUrl,
     isBreaking: false,
-    url: a.url,
+    url: url,
   };
 }
 

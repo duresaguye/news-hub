@@ -7,7 +7,7 @@ import { Empty } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function Home() {
-  const { data, loading, error } = useTopHeadlines({ country: "us", pageSize: 18 });
+  const { data, loading, error } = useTopHeadlines({ pageSize: 18 });
 
   return (
     <div>

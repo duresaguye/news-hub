@@ -42,7 +42,7 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
   const sort = sortBy === "recent" ? "publishedAt" : sortBy === "popular" ? "popularity" : "relevancy"
   const isBlankAll = (!q || q.trim() === "") && category === "all"
   const everything = useEverything({ q, sortBy: sort, language: "en", pageSize: 20 })
-  const headlines = useTopHeadlines({ country: "us", pageSize: 20 })
+  const headlines = useTopHeadlines({ pageSize: 20 })
 
   const loading = isBlankAll ? headlines.loading : everything.loading
   const error = isBlankAll ? headlines.error : everything.error
@@ -53,18 +53,9 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
   const handleBookmarkClick = async (article: Article, e: MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-
-    if (!article.url) {
-      toast({
-        title: "Missing article URL",
-        description: "We couldn't find the original URL for this article.",
-        variant: "destructive",
-      })
-      return
-    }
-
+    const bookmarkTarget = article.url ?? article.id
     await toggleBookmark({
-      url: article.url,
+      url: bookmarkTarget,
       title: article.title,
       source: article.source,
       imageUrl: article.image,
@@ -126,7 +117,7 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
         <div className="grid gap-6">
           {sortedResults.map((result) => (
             <div key={result.id}>
-              <Link href={result.url ? `/article/${encodeURIComponent(result.url)}` : '#'}>
+              <Link href={`/article/${encodeURIComponent(result.id)}`}>
                 <Card 
                   className="hover:shadow-md transition-all duration-200 cursor-pointer border group"
                 >
@@ -165,10 +156,10 @@ export default function SearchResults({ query, category, sortBy }: SearchResults
                             size="icon"
                             className="h-8 w-8"
                             onClick={(e) => handleBookmarkClick(result, e)}
-                            disabled={isMutating(result.url)}
+                            disabled={isMutating(result.url ?? result.id)}
                           >
                             <Bookmark 
-                              className={`w-4 h-4 ${isBookmarked(result.url) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'}`} 
+                              className={`w-4 h-4 ${isBookmarked(result.url ?? result.id) ? 'fill-blue-600 text-blue-600' : 'text-gray-400'}`} 
                             />
                           </Button>
                           {/* Share removed on cards as requested */}

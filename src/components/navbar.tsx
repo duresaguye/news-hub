@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, Search, User, LogOut, TrendingUp, Settings, ChevronDown, MapPin, Globe, Radio } from "lucide-react";
+import { Menu, X, Search, User, LogOut, TrendingUp, Settings, ChevronDown, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -13,7 +13,9 @@ export default function Navbar() {
   const [isLoading, setIsLoading] = useState(false);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [newsScope, setNewsScope] = useState<"local" | "global">("local");
+  const [categories, setCategories] = useState<any[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
+  const [sourcesLoading, setSourcesLoading] = useState(false);
   const router = useRouter();
 
   const { 
@@ -53,48 +55,40 @@ export default function Navbar() {
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
   };
 
-  // Media outlets data - only names
-  const mediaOutlets = {
-    local: [
-      { id: "fanabc", name: "Fana BC", category: "Broadcast" },
-      { id: "addis-standard", name: "Addis Standard", category: "News" },
-      { id: "reporter-ethiopia", name: "The Reporter Ethiopia", category: "News" },
-      { id: "ethiopian-monitor", name: "Ethiopian Monitor", category: "News" },
-      { id: "ena", name: "ENA (Ethiopian News Agency)", category: "Official" }
-    ],
-    global: [
-      { id: "bbc", name: "BBC News", category: "International" },
-      { id: "cnn", name: "CNN", category: "International" },
-      { id: "aljazeera", name: "Al Jazeera", category: "International" },
-      { id: "reuters", name: "Reuters", category: "Wire Service" },
-      { id: "ap", name: "Associated Press", category: "Wire Service" },
-      { id: "dw", name: "Deutsche Welle", category: "International" }
-    ]
-  } as const;
-
-  const currentMediaOutlets = mediaOutlets[newsScope];
-
-  const handleMediaSelect = (mediaId: string) => {
-    setShowMediaDropdown(false);
-    router.push(`/news?scope=${newsScope}&source=${mediaId}`);
-  };
-
-  const toggleNewsScope = () => {
-    const newScope = newsScope === "local" ? "global" : "local";
-    setNewsScope(newScope);
-    setShowMediaDropdown(false);
-    const newSources = mediaOutlets[newScope];
-    const defaultSource = newSources[0]?.id;
-    router.push(`/news?scope=${newScope}&source=${defaultSource}`);
-  };
-
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlScope = params.get('scope');
-    if (urlScope === 'local' || urlScope === 'global') {
-      setNewsScope(urlScope);
+    let active = true;
+    async function loadSources() {
+      try {
+        setSourcesLoading(true);
+        const response = await fetch("/api/news/sources");
+        if (!response.ok) {
+          throw new Error("Failed to load sources");
+        }
+        const data = await response.json();
+        if (!active) return;
+        setTenants(data.tenants ?? []);
+        setCategories(data.categories ?? []);
+      } catch (error) {
+        console.error("Failed to load sources:", error);
+      } finally {
+        if (active) {
+          setSourcesLoading(false);
+        }
+      }
     }
+    loadSources();
+    return () => {
+      active = false;
+    };
   }, []);
+
+  const displayedCategories = categories.slice(0, 5);
+  const topTenants = tenants.slice(0, 6);
+
+  const handleSourceSelect = (tenantId: string) => {
+    setShowMediaDropdown(false);
+    router.push(`/news?source=${encodeURIComponent(tenantId)}`);
+  };
 
   return (
     <motion.nav
@@ -122,56 +116,30 @@ export default function Navbar() {
 
         {/* Main Nav with Filters */}
         <div className="hidden md:flex items-center gap-6">
-          {[
-            { name: "Home", path: "/" },
-            { name: "Trending", path: "/trending" },
-            { name: "Politics", path: "/politics" },
-            { name: "Tech", path: "/technology" },
-            { name: "Sports", path: "/sports" },
-          ].map((item) => (
-            <Link
-              key={item.name}
-              href={item.path}
-              className="text-white/90 hover:text-[var(--brand-accent)] font-semibold transition-colors relative group py-2"
-            >
-              {item.name}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[var(--brand-accent)] to-cyan-400 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-          ))}
-
-          {/* Scope Toggle */}
-          <motion.div 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-2 bg-white/10 backdrop-blur-lg rounded-2xl p-1 border border-white/20 shadow-inner"
+          <Link
+            href="/"
+            className="text-white/90 hover:text-[var(--brand-accent)] font-semibold transition-colors relative group py-2"
           >
-            <motion.button
-              onClick={() => setNewsScope("local")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                newsScope === "local" 
-                  ? "bg-gradient-to-r from-[var(--brand-accent)] to-emerald-500 text-white shadow-lg shadow-[var(--brand-accent)]/30" 
-                  : "text-white/60 hover:text-white/80"
-              }`}
-              whileHover={{ scale: 1.05 }}
-            >
-              <MapPin className="w-4 h-4" />
-              Local
-            </motion.button>
-            <motion.button
-              onClick={() => setNewsScope("global")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                newsScope === "global" 
-                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/30" 
-                  : "text-white/60 hover:text-white/80"
-              }`}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Globe className="w-4 h-4" />
-              Global
-            </motion.button>
-          </motion.div>
+            Home
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[var(--brand-accent)] to-cyan-400 group-hover:w-full transition-all duration-300"></span>
+          </Link>
+          {displayedCategories.map((category) => {
+            const slug = category.slug || category.documentId || category.id;
+            const label = category.Name || category.name || category.title || "Category";
+            const path = category.path || `/news?category=${encodeURIComponent(slug)}`;
+            return (
+              <Link
+                key={slug}
+                href={path}
+                className="text-white/90 hover:text-[var(--brand-accent)] font-semibold transition-colors relative group py-2"
+              >
+                {label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[var(--brand-accent)] to-cyan-400 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            );
+          })}
 
-          {/* Media Filter Dropdown */}
+          {/* Sources Dropdown */}
           <div className="relative">
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -180,7 +148,7 @@ export default function Navbar() {
               className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl px-4 py-2 text-white/90 hover:text-white font-semibold transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl hover:shadow-[var(--brand-accent)]/20"
             >
               <Radio className="w-4 h-4" />
-              <span>Sources</span>
+              <span>{sourcesLoading ? "Loading sources..." : "Sources"}</span>
               <motion.div
                 animate={{ rotate: showMediaDropdown ? 180 : 0 }}
                 transition={{ duration: 0.2 }}
@@ -200,30 +168,39 @@ export default function Navbar() {
                   <div className="p-4 border-b border-white/10">
                     <div className="flex items-center justify-between">
                       <h3 className="font-black text-gray-800 text-sm uppercase tracking-wider">
-                        {newsScope === "local" ? "Ethiopian Media" : "Global Media"}
+                        Featured Sources
                       </h3>
                       <span className="text-xs font-semibold bg-gradient-to-r from-[var(--brand-accent)] to-cyan-500 text-white px-2 py-1 rounded-full">
-                        {currentMediaOutlets.length} sources
+                        {tenants.length}
                       </span>
                     </div>
                   </div>
                   
                   <div className="py-1 max-h-96 overflow-y-auto">
-                    {currentMediaOutlets.map((media) => (
-                      <motion.button
-                        key={media.id}
-                        onClick={() => handleMediaSelect(media.id)}
-                        whileHover={{ scale: 1.02 }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center justify-between transition-all group"
-                      >
-                        <div className="flex flex-col">
-                          <div className="font-semibold text-gray-800 group-hover:text-[var(--brand-accent)]">
-                            {media.name}
+                    {(tenants.length ? tenants : []).map((tenant) => {
+                      const identifier = tenant.documentId || tenant.slug || tenant.id;
+                      const label = tenant.name || tenant.Name || tenant.slug || `Source ${tenant.id}`;
+                      return (
+                        <motion.button
+                          key={identifier}
+                          onClick={() => identifier && handleSourceSelect(identifier)}
+                          whileHover={{ scale: 1.02 }}
+                          className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center justify-between transition-all group"
+                        >
+                          <div className="flex flex-col">
+                            <div className="font-semibold text-gray-800 group-hover:text-[var(--brand-accent)]">
+                              {label}
+                            </div>
+                            {tenant.slug && (
+                              <div className="text-xs text-gray-500 mt-0.5 uppercase">{tenant.slug}</div>
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">{media.category}</div>
-                        </div>
-                      </motion.button>
-                    ))}
+                        </motion.button>
+                      );
+                    })}
+                    {tenants.length === 0 && !sourcesLoading && (
+                      <div className="px-4 py-3 text-sm text-gray-500">No sources available</div>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -383,72 +360,37 @@ export default function Navbar() {
             <div className="px-4 py-6 space-y-6">
               {/* Navigation Links */}
               <div className="space-y-2">
-                {[
-                  { name: "Home", path: "/" },
-                  { name: "Trending", path: "/trending" },
-                  { name: "Politics", path: "/politics" },
-                  { name: "Tech", path: "/technology" },
-                  { name: "Sports", path: "/sports" },
-                ].map((item) => (
+                {[{ label: "Home", path: "/" }, ...displayedCategories.map((category) => ({
+                  label: category.Name || category.name || category.title || "Category",
+                  path: category.path || `/news?category=${encodeURIComponent(category.slug || category.documentId || category.id)}`
+                }))].map((item) => (
                   <Link
-                    key={item.name}
+                    key={item.label}
                     href={item.path}
                     className="flex items-center gap-3 text-white/90 hover:text-[var(--brand-accent)] py-3 px-4 rounded-2xl hover:bg-white/10 transition-all group font-semibold"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span>{item.name}</span>
+                    <span>{item.label}</span>
                   </Link>
                 ))}
               </div>
 
-              {/* Scope Toggle in Mobile */}
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-                <h3 className="text-white font-black mb-3 text-sm uppercase tracking-wider">News Scope</h3>
-                <div className="flex bg-white/10 rounded-xl p-1">
-                  <button
-                    onClick={() => {
-                      setNewsScope("local");
-                      setIsOpen(false);
-                      router.push(`/news?scope=local`);
-                    }}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all ${
-                      newsScope === "local" 
-                        ? "bg-gradient-to-r from-[var(--brand-accent)] to-emerald-500 text-white shadow-lg" 
-                        : "text-white/60"
-                    }`}
-                  >
-                    <MapPin className="w-4 h-4" />
-                    Local
-                  </button>
-                  <button
-                    onClick={() => {
-                      setNewsScope("global");
-                      setIsOpen(false);
-                      router.push(`/news?scope=global`);
-                    }}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all ${
-                      newsScope === "global" 
-                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg" 
-                        : "text-white/60"
-                    }`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    Global
-                  </button>
-                </div>
-              </div>
-
-              {/* Media Sources in Mobile */}
+              {/* Sources in Mobile */}
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
                 <h3 className="text-white font-black mb-3 text-sm uppercase tracking-wider">
-                  {newsScope === "local" ? "Local Sources" : "Global Sources"}
+                  Sources
                 </h3>
                 <div className="space-y-2">
-                  {currentMediaOutlets.map((media) => (
+                  {(topTenants.length ? topTenants : tenants).map((tenant) => {
+                    const identifier = tenant.documentId || tenant.slug || tenant.id;
+                    const label = tenant.name || tenant.Name || tenant.slug || `Source ${tenant.id}`;
+                    return (
                     <motion.button
-                      key={media.id}
+                        key={identifier}
                       onClick={() => {
-                        handleMediaSelect(media.id);
+                          if (identifier) {
+                            handleSourceSelect(identifier);
+                          }
                         setIsOpen(false);
                       }}
                       whileHover={{ scale: 1.02 }}
@@ -456,12 +398,18 @@ export default function Navbar() {
                     >
                       <div className="flex flex-col">
                         <div className="font-semibold text-white group-hover:text-[var(--brand-accent)]">
-                          {media.name}
+                            {label}
                         </div>
-                        <div className="text-xs text-white/60 mt-0.5">{media.category}</div>
+                          {tenant.slug && (
+                            <div className="text-xs text-white/60 mt-0.5 uppercase">{tenant.slug}</div>
+                          )}
                       </div>
                     </motion.button>
-                  ))}
+                    );
+                  })}
+                  {tenants.length === 0 && !sourcesLoading && (
+                    <div className="text-sm text-white/70">No sources available.</div>
+                  )}
                 </div>
               </div>
 

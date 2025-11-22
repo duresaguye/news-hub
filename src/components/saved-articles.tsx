@@ -49,16 +49,18 @@ export default function SavedArticles() {
               ? data.articles
               : [];
 
-        const normalized: SavedArticle[] = items.map((item:any) => ({
-          id: item.id,
+        const normalized: SavedArticle[] = items.map((item:any) => {
+          const permalink = item.permalink ?? item.url ?? item.id;
+          return {
+          id: item.id ?? item.url ?? item.permalink,
           title: item.title ?? 'Untitled article',
           source: item.source ?? 'Unknown source',
           publishedAt: item.publishedAt ?? item.createdAt ?? new Date().toISOString(),
-          url: item.url,
+          url: permalink,
           urlToImage: item.imageUrl ?? item.urlToImage ?? undefined,
           description: item.description ?? undefined,
           category: item.category ?? undefined,
-        })).filter((item:any) => Boolean(item.url));
+        }}).filter((item:any) => Boolean(item?.id));
 
         setSavedArticles(normalized);
       } catch (err) {
@@ -104,7 +106,7 @@ export default function SavedArticles() {
         </Card>
       ) : (
         savedArticles.map((article) => (
-          <Link key={article.id} href={`/article/${encodeURIComponent(article.url)}`}>
+          <Link key={article.id} href={`/article/${encodeURIComponent(article.id)}`}>
             <Card className="hover:border-primary transition cursor-pointer">
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
