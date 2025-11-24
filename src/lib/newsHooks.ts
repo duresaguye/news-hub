@@ -54,7 +54,7 @@ export function useTopHeadlines(params: TopHeadlinesParams) {
       
       try {
         // First try the Strapi API directly
-        const strapiResponse = await fetch('http://led.weytech.et:1338/api/newsses');
+        const strapiResponse = await fetch('https://led.weytech.et:1338/api/newsses');
         if (!strapiResponse.ok) {
           throw new Error(`HTTP error! status: ${strapiResponse.status}`);
         }

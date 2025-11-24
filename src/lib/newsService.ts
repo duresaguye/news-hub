@@ -94,14 +94,14 @@ function extractImage(item: LedNewsItem): string | null {
   ];
 
   for (const img of possibleImages) {
-    if (img) return img.startsWith("http") ? img : `http://led.weytech.et:1338${img}`;
+    if (img) return img.startsWith("http") ? img : `https://led.weytech.et:1338${img}`;
   }
 
   const formats = item.Image?.formats || item.image?.formats;
   if (formats) {
     for (const format of Object.values(formats)) {
       if (format?.url) {
-        return format.url.startsWith("http") ? format.url : `http://led.weytech.et:1338${format.url}`;
+        return format.url.startsWith("http") ? format.url : `https://led.weytech.et:1338${format.url}`;
       }
     }
   }
