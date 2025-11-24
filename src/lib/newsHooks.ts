@@ -7,12 +7,12 @@ export type FetchState<T> = {
   error: string | null;
 };
 
-// Define a type for the Strapi article response
+
 interface StrapiArticle {
   id: number;
   attributes: {
     Title?: string;
-    title?: string; // Some APIs might use lowercase 'title'
+    title?: string; 
     content?: Array<{
       children: Array<{
         text: string;

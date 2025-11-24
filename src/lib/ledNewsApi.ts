@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://led.weytech.et:1338/api";
+const API_BASE_URL = "https://led.weytech.et:1338/api";
 
 function buildUrl(path: string, params?: Record<string, unknown>) {
   const base = API_BASE_URL.endsWith("/") ? API_BASE_URL : `${API_BASE_URL}/`;
