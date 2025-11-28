@@ -14,37 +14,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, User, ChevronDown } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/contexts/auth-context";
 
 export function UserDropdown() {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { user, loading, logout } = useAuth();
 
-  // ✅ same pattern as Navbar
-  const {
-    data: session,
-    isPending: sessionLoading,
-    error: sessionError,
-    refetch: refetchSession,
-  } = authClient.useSession();
-
-  if (sessionLoading || !session?.user) return null;
-  const user = session.user;
+  if (loading || !user) return null;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push("/auth/login");
-            refetchSession(); // same as Navbar flow
-          },
-          onError: (error) => {
-            console.error("Logout failed:", error);
-          },
-        },
-      });
+      await logout();
+      router.push("/auth/login");
     } finally {
       setIsLoggingOut(false);
     }
@@ -60,6 +43,12 @@ export function UserDropdown() {
       .substring(0, 2);
   };
 
+  const displayName = user.username || user.email || "User";
+  const avatarSrc =
+    typeof user.image === "string"
+      ? user.image
+      : (user as any)?.image?.url ?? null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -69,11 +58,11 @@ export function UserDropdown() {
           disabled={isLoggingOut}
         >
           <Avatar className="h-7 w-7">
-            {user.image ? (
-              <AvatarImage src={user.image} alt={user.name || "User"} />
+            {avatarSrc ? (
+              <AvatarImage src={avatarSrc} alt={displayName} />
             ) : (
               <AvatarFallback className="bg-[var(--brand-accent)] text-white text-xs">
-                {getInitials(user.name || user.email)}
+                {getInitials(displayName)}
               </AvatarFallback>
             )}
           </Avatar>
@@ -85,7 +74,7 @@ export function UserDropdown() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user.name || "User"}
+              {displayName}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email || "No email"}

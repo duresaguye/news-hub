@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/contexts/auth-context";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,15 +24,7 @@ function LoginForm() {
     setError(null);
 
     try {
-      const res = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      if (res.error) {
-        throw new Error(res.error.message || "Failed to sign in");
-      }
-
+      await login(email, password);
       router.replace(redirect);
     } catch (err: any) {
       setError(err.message || "Unknown error");

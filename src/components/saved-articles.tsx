@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Bookmark, ArrowRight, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { authClient } from "@/lib/auth-client"
+import { useAuth } from "@/contexts/auth-context"
 
 interface SavedArticle {
   id: string
@@ -21,13 +21,21 @@ interface SavedArticle {
 
 export default function SavedArticles() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [savedArticles, setSavedArticles] = useState<SavedArticle[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchSavedArticles = async () => {
+      if (!user) {
+        setSavedArticles([]);
+        setIsLoading(false);
+        setError(null);
+        return;
+      }
       try {
+        setIsLoading(true);
         const response = await fetch('/api/saved-articles', {
           headers: {
             'Content-Type': 'application/json',
@@ -36,6 +44,11 @@ export default function SavedArticles() {
         });
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            setSavedArticles([]);
+            setError(null);
+            return;
+          }
           throw new Error('Failed to fetch saved articles');
         }
 
@@ -63,6 +76,7 @@ export default function SavedArticles() {
         }}).filter((item:any) => Boolean(item?.id));
 
         setSavedArticles(normalized);
+        setError(null);
       } catch (err) {
         console.error('Error fetching saved articles:', err);
         setError('Failed to load saved articles. Please try again.');
@@ -72,7 +86,32 @@ export default function SavedArticles() {
     };
 
     fetchSavedArticles();
-  }, []);
+  }, [user]);
+
+  if (authLoading) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading your account...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <Bookmark className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <p className="text-muted-foreground">Sign in to view your saved articles.</p>
+          <Button variant="outline" className="mt-4" onClick={() => router.push('/auth/login')}>
+            Go to Login
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

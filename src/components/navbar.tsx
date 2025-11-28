@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Menu, X, Search, User, LogOut, TrendingUp, Settings, ChevronDown, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,39 +18,27 @@ export default function Navbar() {
   const [sourcesLoading, setSourcesLoading] = useState(false);
   const router = useRouter();
 
-  const { 
-    data: session, 
-    isPending: sessionLoading,
-    error: sessionError,
-    refetch: refetchSession
-  } = authClient.useSession();
+  const { user, loading: sessionLoading, logout } = useAuth();
 
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push("/auth/login");
-            refetchSession();
-          },
-          onError: (error) => {
-            console.error("Logout failed:", error);
-          }
-        },
-      });
+      await logout();
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isAuthenticated = !!session?.user;
+  const isAuthenticated = !!user;
 
   // Get user initials for avatar
   const getUserInitials = () => {
-    if (!session?.user?.name) return "U";
-    
-    const names = session.user.name.split(' ');
+    const name = user?.username || user?.email || "";
+    if (!name) return "U";
+    const names = name.split(' ');
     if (names.length === 1) return names[0].charAt(0).toUpperCase();
     return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
   };
@@ -240,10 +228,10 @@ export default function Navbar() {
                     </div>
                     <div className="text-left">
                       <div className="text-white font-semibold text-sm leading-tight max-w-[120px] truncate">
-                        {session?.user?.name?.split(' ')[0]}
+                        {(user?.username || user?.email || "User").split(' ')[0]}
                       </div>
                       <div className="text-white/60 text-xs leading-tight">
-                        {session?.user?.email?.split('@')[0]}
+                        {user?.email?.split('@')[0] || ''}
                       </div>
                     </div>
                   </div>
@@ -265,10 +253,10 @@ export default function Navbar() {
                     >
                       <div className="p-3 border-b border-white/10">
                         <div className="font-semibold text-gray-800 text-sm truncate">
-                          {session?.user?.name}
+                          {user?.username || user?.email}
                         </div>
                         <div className="text-gray-500 text-xs truncate">
-                          {session?.user?.email}
+                          {user?.email}
                         </div>
                       </div>
                       
@@ -432,8 +420,8 @@ export default function Navbar() {
                         {getUserInitials()}
                       </div>
                       <div className="flex-1">
-                        <div className="text-white font-semibold">{session?.user?.name}</div>
-                        <div className="text-white/60 text-sm">{session?.user?.email}</div>
+                        <div className="text-white font-semibold">{user?.username || user?.email}</div>
+                        <div className="text-white/60 text-sm">{user?.email}</div>
                       </div>
                     </div>
 

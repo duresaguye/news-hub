@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register: registerAccount } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,16 +22,8 @@ export default function RegisterPage() {
     setError(null);
 
     try {
-      const res = await authClient.signUp.email({
-        email,
-        password,
-        name: name.trim(),
-      });
-
-      if (res.error) {
-        throw new Error(res.error.message || "An error occurred during sign up");
-      }
-
+      const username = name.trim() || email.split("@")[0];
+      await registerAccount({ username, email, password });
       router.replace("/profile");
     } catch (err: any) {
       setError(err.message || "Unknown error");

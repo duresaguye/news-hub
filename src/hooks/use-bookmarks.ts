@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth-client';
+import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/components/ui/use-toast';
 
 type BookmarkPayload = {
@@ -30,12 +30,9 @@ type ToggleResult = {
 export function useBookmarks() {
   const router = useRouter();
   const { toast } = useToast();
-  const {
-    data: session,
-    isPending: sessionPending,
-  } = authClient.useSession();
+  const { user, loading: sessionPending } = useAuth();
 
-  const isAuthenticated = !!session?.user;
+  const isAuthenticated = !!user;
   const [savedMap, setSavedMap] = useState<Record<string, SavedRecord>>({});
   const [loading, setLoading] = useState(false);
   const [mutatingUrls, setMutatingUrls] = useState<Set<string>>(new Set());

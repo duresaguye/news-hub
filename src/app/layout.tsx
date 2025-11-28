@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/navbar";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import Footer from "@/components/footer";
+import { AuthProvider } from "@/contexts/auth-context";
 
 export const metadata: Metadata = {
   title: "News Hub",
@@ -15,9 +14,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
-        <Navbar  />
-        {children}
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          {children}
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

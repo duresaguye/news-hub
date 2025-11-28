@@ -1,10 +1,9 @@
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { getLedSession } from '@/lib/ledSession';
 import ProfilePageClient from './ProfilePageClient';
 
 export default async function ProfilePage() {
-  const session = await auth.api.getSession({ headers: headers() });
+  const session = getLedSession();
   if (!session?.user) {
     redirect('/auth/login?redirect=/profile');
   }
