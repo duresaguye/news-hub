@@ -1,81 +1,66 @@
-# News Hub (Next.js 14 + TailwindCSS)
+# News Hub
 
-## Setup
-
-1. **Environment Variables** (Set these in your Vercel project settings):
-   - `GUARDIAN_API_KEY` - For The Guardian API
-   - `CURRENTS_API_KEY` - For Currents API
-   - `NEWS_API_KEY` - For NewsAPI
-   - `DATABASE_URL` - Your Supabase database URL
-   - `DIRECT_URL` - Direct connection URL for Prisma
-
-2. **Install dependencies**:
-   ```bash
-   pnpm install
-   ```
-
-3. **Database Setup**:
-   - Create a new project on Supabase
-   - Run the SQL migrations from `supabase/migrations/`
-   - Add your Supabase connection details to Vercel environment variables
-
-4. **Local Development**:
-   ```bash
-   pnpm dev
-   ```
-
-5. **Production Deployment**:
-   - Connect your GitHub repository to Vercel
-   - Add all required environment variables in Vercel project settings
-   - Deploy!
+A modern news aggregation application built with Next.js 14 and TailwindCSS.
 
 ## Features
 
-- **App Router** - Modern Next.js 14 App Router structure (`src/app/`)
-- **Multi-Source News Aggregation**
-  - **Global News Flow**:
-    1. NewsAPI (Primary)
-    2. Currents API (Fallback 1)
-    3. The Guardian API (Fallback 2)
-    4. RSS Feeds (Final Fallback)
-  - **Local News Flow**:
-    1. Currents API with Ethiopia focus (Primary)
-    2. The Guardian API (Fallback)
-    3. RSS Feeds (Final Fallback)
-  - **Direct Source Selection**:
-    - Direct access to specific RSS sources when selected
-- **Smart Caching** - Supabase-powered caching system that reduces API calls and improves performance
-  - 30-minute cache duration for general news
-  - 10-minute cache for specific source requests
-- **Responsive Design** - Fully responsive layout built with TailwindCSS
-- **Modern UI** - Accessible and intuitive user interface components
-- **Advanced Search** - Comprehensive search across all news sources
-- **Category Support** - Organized news by categories including World, Politics, Technology, and more
+- **Modern Stack**: Built with Next.js 14 (App Router), TypeScript, and TailwindCSS.
+- **UI Components**: Utilizes Shadcn UI for a polished, accessible interface.
+- **News Aggregation**: Fetches news from the LED API, supporting various categories and tenants.
+- **Responsive Design**: Fully responsive layout for all devices.
+- **Search & Filtering**:
+  - Search by keywords.
+  - Filter by categories (World, Politics, Technology, etc.).
+  - Filter by tenants/sources.
+- **Article View**: Dedicated article reading experience.
 
-## Environment Variables
+## Tech Stack
 
-All required environment variables should be set in your Vercel project settings. The application uses the following variables:
+- **Framework**: [Next.js 14](https://nextjs.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Library**: [Shadcn UI](https://ui.shadcn.com/) (Radix UI + Tailwind)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **State/Data**: React Hooks, Custom API Service
 
-- `GUARDIAN_API_KEY`: For The Guardian API
-- `CURRENTS_API_KEY`: For Currents API
-- `NEWS_API_KEY`: For NewsAPI
-- `DATABASE_URL`: Supabase database connection URL
-- `DIRECT_URL`: Direct database connection URL for Prisma
+## Getting Started
 
-## Local Development
+### Prerequisites
 
-For local development, create a `.env.local` file in the root directory with the variables above.
+- Node.js (Latest LTS recommended)
+- pnpm (or npm/yarn)
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd news-hub
+    ```
+
+2.  Install dependencies:
+    ```bash
+    pnpm install
+    ```
+
+3.  Run the development server:
+    ```bash
+    pnpm dev
+    ```
+
+4.  Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## API Endpoints
 
-- `GET /api/news/top-headlines` - Get top headlines
-- `GET /api/news/everything` - Search news articles
-- `GET /api/news/article` - Get a specific article by URL
+The application provides internal API routes that proxy requests to the backend service:
 
-## Caching
+- `GET /api/news/top-headlines`: Fetch top headlines.
+- `GET /api/news/everything`: Search and filter news.
+- `GET /api/news/article`: Get a specific article.
 
-News data is cached for 30 minutes to reduce API usage. The cache is stored in Supabase.
+## Project Structure
 
-## License
+- `src/app`: App Router pages and API routes.
+- `src/components`: Reusable UI components.
+- `src/lib`: Utility functions and API services (`newsService.ts`, `ledNewsApi.ts`).
+- `src/types`: TypeScript type definitions.
 
-MIT
